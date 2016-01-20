@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT([SSC],[0.0.0],[],[ssc],[https://github.com/akashrawal/ssc])
-AC_CONFIG_SRCDIR([ssc/common.h])#FIXME: suitable file
+AC_CONFIG_SRCDIR([ssc/ssc.h])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall -Werror silent-rules])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
@@ -162,6 +162,9 @@ int main()
 
 AC_LANG_POP([C])
 
+# Checks for libraries.
+PKG_CHECK_MODULES([MMC], [mmc >= 0.0.0])
+
 #Write all output
 
 AC_SUBST([SSC_UINT16_ENDIAN], [$ssc_cv_endian_uint16])
@@ -174,7 +177,6 @@ AC_CONFIG_FILES([Makefile
                  data/ssc.pc
                  ssc/Makefile
                  ssc/config.sh
-                 ssc/Makefile
-                 doc/Makefile])
+                 sidc/Makefile])
 AC_CONFIG_HEADERS([config.h])
 AC_OUTPUT

@@ -1,5 +1,5 @@
-/* includes.h
- * Headers
+/* ssc.h
+ * API header
  * 
  * Copyright 2015 Akash Rawal
  * This file is part of Modular Middleware.
@@ -18,10 +18,9 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SSC_INCLUDES_H
-#define SSC_INCLUDES_H
+#ifndef SSC_H_INCLUDED
+#define SSC_H_INCLUDED
 
-#include <mmc/mmc.h>
+#include "incl.h"
 
-#endif //SSC_INCLUDES_H
-
+#endif //SSC_H_INCLUDED

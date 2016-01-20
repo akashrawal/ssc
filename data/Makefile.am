@@ -1,5 +1,5 @@
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = mtc0.pc
+pkgconfig_DATA = ssc.pc
 
-EXTRA_DIST = mtc0.pc.in
+EXTRA_DIST = ssc.pc.in

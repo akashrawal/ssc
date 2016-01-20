@@ -10,16 +10,19 @@ BUILT_SOURCES = generated.h
 
 #libssc.la
 ssc_c =  \
-	 
+	types.c \
+	serialize.c
 
-ssc_h =  \
+ssc_h =  ssc.h incl.h \
+	types.h \
+	serialize.h
 	
      
 libssc_la_SOURCES = $(ssc_c) $(ssc_h)       
 	        
 nodist_libssc_la_SOURCES = generated.h
 libssc_la_CFLAGS = -Wall -I$(top_builddir) -I$(top_srcdir)
-libssc_la_LDFLAGS = -lm
+libssc_la_LDFLAGS = -lm $(MMC_LIBS)
 
 #Headers
 sscincludedir = $(includedir)/ssc

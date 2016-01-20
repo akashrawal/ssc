@@ -24,7 +24,7 @@
  * 2. Signed integers will be represented in two's complement form.
  */
 
-#include "types.h"
+#include "incl.h"
 
 #include <limits.h>
 #include <math.h>

@@ -24,10 +24,8 @@
  * 2. Signed integers will be represented in two's complement form.
  */
  
-#ifndef SSC_TYPES_H
-#define SSC_TYPES_H
- 
-#include "includes.h"
+
+#include <ssc/generated.h>
 
 /**
  * \addtogroup ssc_types
@@ -415,4 +413,3 @@ SscFltType ssc_flt64_classify(uint64_t val);
 
 ///\}
 
-#endif //SSC_TYPES_H
