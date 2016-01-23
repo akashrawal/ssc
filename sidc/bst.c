@@ -32,12 +32,14 @@ struct _BstNode
 	char key[];
 };
 
-#define node_height(node) ((node) ? (node)->height : 0)
+#define bst_node_height(node) ((node) ? (node)->height : 0)
 #define ssc_max(a, b) ((a) > (b) ? (a) : (b))
-#define node_recalc_height(node) \
-	(ssc_max(node_height((node)->left), node_height((node)->right)) + 1)
+#define bst_node_calc_height(node) \
+	(ssc_max(bst_node_height((node)->left), bst_node_height((node)->right)) + 1)
+#define bst_node_calc_balance_factor(node) \
+	(bst_node_height((node)->right) - bst_node_height((node)->left))
 
-static BstNode *new_node(const char *key, void *value)
+static BstNode *bst_node_new(const char *key, void *value)
 {
 	size_t key_len = strlen(key);
 	
@@ -50,11 +52,63 @@ static BstNode *new_node(const char *key, void *value)
 	return node;
 }
 
+static void bst_node_destroy_rec(BstNode *node)
+{
+	if (! node)
+		return;
+	
+	bst_node_destroy_rec(node->left);
+	bst_node_destroy_rec(node->right);
+	free(node);
+}
+
+static BstNode *bst_node_rotate_left(BstNode *node)
+{
+	BstNode *old_root, *new_root, *ltree, *ctree, *rtree;
+	old_root = node;
+	new_root = node->right;
+	ltree = node->left;
+	ctree = node->right->left;
+	rtree = node->right->right;
+	
+	node = new_root;
+	node->left = old_root;
+	node->left->left = ltree;
+	node->left->right = ctree;
+	node->right = rtree;
+	
+	node->left->height = bst_node_calc_height(node->left);
+	node->height = bst_node_calc_height(node);
+	
+	return node;
+}
+
+static BstNode *bst_node_rotate_right(BstNode *node)
+{
+	BstNode *old_root, *new_root, *ltree, *ctree, *rtree;
+	old_root = node;
+	new_root = node->left;
+	ltree = node->left->left;
+	ctree = node->left->right;
+	rtree = node->right;
+	
+	node = new_root;
+	node->right = old_root;
+	node->left = ltree;
+	node->right->left = ctree;
+	node->right->right = rtree;
+	
+	node->right->height = bst_node_calc_height(node->right);
+	node->height = bst_node_calc_height(node);
+	
+	return node;
+}
+
 //The data structure
 struct _SscBst
 {
 	MmcRC parent;
-	BstNode *right;
+	BstNode *root;
 };
 
 mmc_rc_define(SscBst, ssc_bst)
@@ -64,18 +118,15 @@ SscBst *ssc_bst_new()
 	SscBst *bst = (SscBst *) malloc(sizeof(SscBst));
 	
 	mmc_rc_init(bst);
-	bst->right = NULL;
+	bst->root = NULL;
 	
 	return bst;
 }
 
-static BstNode *insert_rec(BstNode *node, int isright, BstNode *new_node)
+static BstNode *insert_rec(BstNode *node, BstNode *new_node)
 {
 	int cmpval;
-	int height_diff;
-	enum { ROTATE_LEFT, ROTATE_RIGHT, NO_ROTATE} rotate_dir;
-	BstNode **branch_ptr = NULL;
-	int branch_right;
+	BstNode **branch_ptr, *new_branch;
 	
 	//Base case
 	if (node == NULL)
@@ -86,100 +137,46 @@ static BstNode *insert_rec(BstNode *node, int isright, BstNode *new_node)
 	if (cmpval == 0)
 		return NULL;
 	else if (cmpval < 0)
-	{
 		branch_ptr = &(node->left);
-		branch_right = 0;
-	}
 	else
-	{
 		branch_ptr = &(node->right);
-		branch_right = 1;
-	}
 	
 	//Do insertion recursively
-	BstNode *new_branch = insert_rec
-		(*branch_ptr, branch_right, new_node);
+	new_branch = insert_rec(*branch_ptr, new_node);
 	if (new_branch == NULL)
 		return NULL;
 	*branch_ptr = new_branch;
+	node->height = bst_node_calc_height(node);
 	
-	
-	//Calculate height difference
-	height_diff = node_height(node->right) - node_height(node->left);
-	
-	//Decide which direction to rotate
-	if (isright)
+	//Rotate and balance tree
+	if (bst_node_calc_balance_factor(node) < -1)
 	{
-		if (height_diff > 1)
-			rotate_dir = ROTATE_LEFT;
-		if (height_diff < 0)
-			rotate_dir = ROTATE_RIGHT;
+		if (bst_node_calc_balance_factor(node->left) == 1)
+			node->left = bst_node_rotate_left(node->left);
+		node = bst_node_rotate_right(node);
 	}
-	else
+	else if (bst_node_calc_balance_factor(node) > 1)
 	{
-		if (height_diff > 0)
-			rotate_dir = ROTATE_LEFT;
-		if (height_diff < -1)
-			rotate_dir = ROTATE_RIGHT;
+		if (bst_node_calc_balance_factor(node->right) == -1)
+			node->right = bst_node_rotate_right(node->right);
+		node = bst_node_rotate_left(node);
 	}
-	
-	//Do rotation and recalculate heights
-	if (rotate_dir == ROTATE_LEFT)
-	{
-		BstNode *old_root, *new_root, *ltree, *ctree, *rtree;
-		old_root = node;
-		new_root = node->right;
-		ltree = node->left;
-		ctree = node->right->left;
-		rtree = node->right->right;
-		
-		node = new_root;
-		node->left = old_root;
-		node->left->left = ltree;
-		node->left->right = ctree;
-		node->right = rtree;
-		
-		node_recalc_height(node->left);
-	}
-	else if (rotate_dir == ROTATE_RIGHT)
-	{
-		BstNode *old_root, *new_root, *ltree, *ctree, *rtree;
-		old_root = node;
-		new_root = node->left;
-		ltree = node->left->left;
-		ctree = node->left->right;
-		rtree = node->right;
-		
-		node = new_root;
-		node->right = old_root;
-		node->left = ltree;
-		node->right->left = ctree;
-		node->right->right = rtree;
-		
-		node_recalc_height(node->right);
-	}
-	node_recalc_height(node);
 	
 	return node;
 }
 
 int ssc_bst_insert(SscBst *bst, const char *key, void *value)
 {	
-	BstNode *new_node = new_node(key, value);
-	//Handle empty case separately
-	if (! bst->right)
-	{
-		bst->right = new_node;
-	}
-	else
-	{
-		BstNode *new_root = insert_rec(bst->right, 1, new_node);
-		if (! new_root)
-			return 0;
-		bst->right = new_root;
-	}
+	BstNode *new_node = bst_node_new(key, value);
 	
-	stack_free(stack);
+	BstNode *new_root = insert_rec(bst->root, new_node);
+	if (! new_root)
+	{
+		free(new_node);
+		return 0;
+	}
+	bst->root = new_root;
+	
 	return 1;
 }
 
@@ -188,7 +185,7 @@ void *ssc_bst_lookup(SscBst *bst, const char *key)
 	BstNode *node;
 	int cmpval;
 	
-	node = bst->right;
+	node = bst->root;
 	
 	while (node)
 	{
@@ -205,25 +202,15 @@ void *ssc_bst_lookup(SscBst *bst, const char *key)
 	return NULL;
 }
 
-static void bst_node_destroy(BstNode *node)
+static void ssc_bst_destroy(SscBst *bst)
 {
-	if (! node)
-		return;
-	
-	bst_node_destroy(node->left);
-	bst_node_destroy(node->right);
-	free(node);
-}
-
-static void *ssc_bst_destroy(SscBst *bst)
-{
-	bst_node_destroy(node->right);
+	bst_node_destroy_rec(bst->root);
 	free(bst);
 }
 
 #ifdef SSC_TEST_BST
 
-static void ssc_bst_node_prettyprint_rec(BstNode *node, int depth)
+static void bst_node_prettyprint_rec(BstNode *node, int depth)
 {
 	int i;
 #define tab for (i = 0; i < depth; i++) printf(" ")
@@ -234,39 +221,35 @@ static void ssc_bst_node_prettyprint_rec(BstNode *node, int depth)
 	{
 		tab; 
 		printf("NULL\n");
+		return;
 	}
 		
 	tab; printf("node\n");
 	tab; printf("{\n");
-	tabx; printf("\"%s\", h=%d\m");
-	tabx; printf("left=", node->key, node->height);
-	tabx; ssc_bst_node_prettyprint(node->left, depth + 1);
+	tabx; printf("\"%s\", h=%d\n", node->key, node->height);
+	tabx; printf("left=");
+	tabx; bst_node_prettyprint_rec(node->left, depth + 1);
 	tabx; printf("right=");
-	tabx; ssc_bst_node_prettyprint(node->right, depth + 1);
+	tabx; bst_node_prettyprint_rec(node->right, depth + 1);
 	tab; printf("}\n");
 }
 
-static void ssc_bst_node_prettyprint(BstNode *node, int isright)
+static void bst_node_prettyprint(BstNode *node)
 {
-	if (isright)
-		printf("Right ");
-	else
-		printf("Left ");
-	ssc_bst_node_prettyprint_rec(node, 0);
+	bst_node_prettyprint_rec(node, 0);
 }
 
-static void ssc_bst_check_rec(BstNode *node, int isright)
+static void ssc_bst_check_rec(BstNode *node)
 {
-	int height_diff;
-	int min_diff;
+	int balance_factor;
 	int errors = 0;
 	//Base case
 	if (! node)
 		return;
 	
 	//Check children
-	ssc_bst_check_rec(node->left, 0);
-	ssc_bst_check_rec(node->right, 1);
+	ssc_bst_check_rec(node->left);
+	ssc_bst_check_rec(node->right);
 	
 	//Check order
 	if (node->left)
@@ -283,20 +266,15 @@ static void ssc_bst_check_rec(BstNode *node, int isright)
 		}
 	
 	//Check heights
-	if (node->height != 
-		max(node_height(node->left), node_height(node->right)) + 1)
+	if (node->height != bst_node_calc_height(node))
 	{
 		ssc_warn("Height of the node is insane");
 		errors++;
 	}
 	
 	//Check balance
-	height_diff = node_height(node->right) - node_height(node->left);
-	if (isright)
-		min_diff = 0;
-	else 
-		min_diff = 1;
-	if (height_diff > (min_diff + 1) || height_diff < min_diff)
+	balance_factor = bst_node_calc_balance_factor(node);
+	if (balance_factor > 1 || balance_factor < -1)
 	{
 		ssc_warn("Unbalanced tree");
 		errors++;
@@ -305,17 +283,17 @@ static void ssc_bst_check_rec(BstNode *node, int isright)
 	if (errors)
 	{
 		printf("Problematic node: \n");
-		ssc_bst_node_prettyprint(node, isright);
+		bst_node_prettyprint(node);
 		ssc_error("Found %d errors in above node", errors);
 	}
 }
 
 static void ssc_bst_check(SscBst *bst)
 {
-	ssc_bst_check_rec(bst->right, 1);
+	ssc_bst_check_rec(bst->root);
 }
 
-#define TEST_ENTRIES 16
+#define TEST_ENTRIES 256
 #define TEST_IDLEN 32
 #define CHARSET_LEN 37
 static char charset[] = "qwertyuiopasdfghjklzxcvbnm0123456789_";
@@ -337,24 +315,36 @@ int main()
 	int i;
 	SscBst *bst;
 	
-	bst = ssc_bst_new();
-	
-	//Add a few identifiers
-	for (i = 0; i < TEST_ENTRIES; i++)
+	while(1)
 	{
-		create_idfier(idfiers[i]);
-		ssc_bst_insert(bst, idfiers[i], bst);
+		bst = ssc_bst_new();
+		
+		//Add a few identifiers
+		for (i = 0; i < TEST_ENTRIES; i++)
+		{
+			create_idfier(idfiers[i]);
+			
+			ssc_bst_insert(bst, idfiers[i], bst);
+			
+			//Check for sanity
+			ssc_bst_check(bst);
+			
+			//Check for insertion
+			if (! ssc_bst_lookup(bst, idfiers[i]))
+				ssc_error("Inserted element %s not there in list", 
+					idfiers[i]);
+		}
+		
+		//Test for presence
+		for (i = 0; i < TEST_ENTRIES; i++)
+		{
+			if (! ssc_bst_lookup(bst, idfiers[i]))
+				ssc_error("Inserted element %s not there in list", 
+					idfiers[i]);
+		}
+		
+		ssc_bst_unref(bst);
 	}
-	
-	//Test for presence
-	for (i = 0; i < TEST_ENTRIES; i++)
-	{
-		if (! ssc_bst_lookup(bst, idfiers[i]))
-			ssc_error("Inserted element %s not there in list", 
-				idfiers[i]);
-	}
-	
-	ssc_bst_unref(bst);
 	
 	return 0;
 }

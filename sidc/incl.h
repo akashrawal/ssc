@@ -22,5 +22,5 @@
 #include <ssc/ssc.h>
 
 //Include all headers
-#include "symbol.h"
+#include "bst.h"
 
