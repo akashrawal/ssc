@@ -17,81 +17,139 @@
  * You should have received a copy of the GNU General Public License
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
-/*
+
+//Allocator for semantic objects
+typedef struct _SscAllocator SscAllocator;
+
+mmc_rc_declare(SscAllocator, ssc_allocator);
+
+SscAllocator *ssc_allocator_new();
+void *ssc_allocator_alloc();
+
+/////////////////////
+//Symbol table
+
+//Forward declarations
+typedef struct _SscSymbol SscSymbol;
+
+//Base type
 typedef enum
 {
-	//Terminal symbols with lexemes
-	SSC_TOKEN_ID,
-	SSC_TOKEN_NUM,
-	
-	//Punctuation type terminal symbols
-	SSC_TOKEN_STR,
-	SSC_TOKEN_LPAREN,
-	SSC_TOKEN_RPAREN,
-	SSC_TOKEN_LCURLY,
-	SSC_TOKEN_RCURLY,
-	SSC_TOKEN_COLON,
-	SSC_TOKEN_SEMICOLON,
-	SSC_TOKEN_ASSIGN,
-	
-	//Terminal symbols representing keywords 
-	SSC_TOKEN_KW_INT8,
-	SSC_TOKEN_KW_INT16,
-	SSC_TOKEN_KW_INT32,
-	SSC_TOKEN_KW_INT64,
-	SSC_TOKEN_KW_UINT8,
-	SSC_TOKEN_KW_UINT16,
-	SSC_TOKEN_KW_UINT32,
-	SSC_TOKEN_KW_UINT64,
-	SSC_TOKEN_KW_FLT32,
-	SSC_TOKEN_KW_FLT64,
-	SSC_TOKEN_KW_STR,
-	SSC_TOKEN_KW_MSG,
-	SSC_TOKEN_KW_ARRAY,
-	SSC_TOKEN_KW_SEQ,
-	SSC_TOKEN_KW_OPT,
-	SSC_TOKEN_KW_STRUCT,
-	SSC_TOKEN_KW_KLASS,
-	SSC_TOKEN_KW_REF,
-	
-	//Nonterminal symbols
-	SSC_TOKEN_BASE_TYPE,
-	SSC_TOKEN_TYPE,
-	SSC_TOKEN_FIELD,
-	SSC_TOKEN_
-} SscToken;
-*/
+	SSC_TYPE_FUNDAMENTAL_INT8,
+	SSC_TYPE_FUNDAMENTAL_INT16,
+	SSC_TYPE_FUNDAMENTAL_INT32,
+	SSC_TYPE_FUNDAMENTAL_INT64,
+	SSC_TYPE_FUNDAMENTAL_UINT8,
+	SSC_TYPE_FUNDAMENTAL_UINT16,
+	SSC_TYPE_FUNDAMENTAL_UINT32,
+	SSC_TYPE_FUNDAMENTAL_UINT64,
+	SSC_TYPE_FUNDAMENTAL_FLT32,
+	SSC_TYPE_FUNDAMENTAL_FLT64,
+	SSC_TYPE_FUNDAMENTAL_STRING,
+	SSC_TYPE_FUNDAMENTAL_MSG
+} SscTypeFundamentalID;
 
-//Semantic data type
-typedef enum 
+typedef enum
 {
-	SSC_SEM_STR,
-	SSC_SEM_NUM,
-	SSC_SEM_BASE_TYPE,
-	SSC_SEM_TYPE,
-	SSC_SEM_FIELD,
-	SSC_SEM_TUPLE,
-	SSC_SEM_STRUCT,
-	SSC_SEM_FN,
-	SSC_SEM_IFACE,
-} SscSemType;
- 
-typedef struct _SscSem SscSem;
-struct _SscSem
-{
-	SscSemType type;
-};
+	SSC_TYPE_OPTIONAL = -2,
+	SSC_TYPE_SEQ = -1,
+	SSC_TYPE_NORMAL = 0
+	//and > 0 for array
+} SscTypeComplexity;
+
 
 typedef struct 
 {
-	
+	SscSymbol *sym;
+	SscTypeFundamentalID fid; //If sym is not null this is invalid
+	int complexity
+} SscType;
+
+#define ssc_type_is_fundamental(typeptr) ((typeptr)->sym ? 1 : 0)
+
+//Variable
+typedef struct _SscVar SscVar;
+struct _SscVar
+{
+	SscType type;
+	SscVar *next;
+	char name[];
 };
 
-typedef struct
+//Structure
+typedef struct _SscStruct SscStruct;
+struct _SscStruct
 {
-	MmcRC parent;
-	
-	
-} SscSymbolDB;
+	SscSemStr *name;
+	SscVar *fields;
+	char name[];
+};
 
+//Function
+typedef struct
+{	
+	SscVar *in, *out;
+	char name[];
+} SscFn;
+
+//interface
+typedef struct _SscIface SscIface;
+struct _SscIface
+{
+	SscIface *parent;
+	SscFn *fns;
+	char name[];
+};
+
+//Symbol database interface
+struct _SscSymbol
+{
+	SscSymbol *next;
+	
+	char *name;
+	//Only one of the following is not null
+	SscStruct *sym_struct;
+	SscIface *sym_iface;
+};
+
+//File states
+typedef enum
+{
+	SSC_FILE_NOT_PARSED,
+	SSC_FILE_PARSING,
+	SSC_FILE_PARSED,
+	SSC_FILE_BAD
+} SscFileState;
+
+typedef struct 
+{
+	char *name;
+	SscSymbol *list;
+	SscAllocator *allocator;
+} SscFileData;
+
+typedef struct _SscSymbolDB SscSymbolDB;
+
+mmc_rc_declare(SscSymbolDB, ssc_symbol_db)
+
+SscSymbolDB *ssc_symbol_db_new();
+
+void ssc_symbol_db_register_file_parsing
+	(SscSymbolDB *db, const char *filename);
+
+void ssc_symbol_db_register_file_parsed
+	(SscSymbolDB *db, const char *filename, SscFileData data);
+	
+void ssc_symbol_db_register_file_bad
+	(SscSymbolDB *db, const char *filename);
+	
+SscFileState ssc_symbol_db_get_file_state
+	(SscSymbolDB *db, const char *filename);
+	
+SscFileData ssc_symbol_db_get_file_data
+	(SscSymbolDB *db, const char *filename);
+
+SscSymbol *ssc_symbol_db_lookup(SscSymbolDB *db, const char *name);
+
+SscSymbol *ssc_symbol_db_list_by_file
+	(SscSymbolDB *db, const char *filename);
