@@ -44,7 +44,16 @@ typedef union
 	SscFn *xfn;
 } SscYYSType;
 
-#define YYSTYPE SscYYSType
+//Flex scanner interface
+typedef void * yyscan_t;
+extern int ssc_yylex(SscYYSType *yylval_param ,yyscan_t yyscanner);
+//int ssc_yylex_init(yyscan_t *yyscanner);
+int ssc_yylex_init_extra(SscParser *user_defined, yyscan_t *yyscanner);
+int ssc_yylex_destroy(yyscan_t yyscanner);
+void ssc_yyset_in(FILE *input, yyscan_t yyscanner);
+
+//Bison interface
+#include "parser.tab.h"
 
 //Logging
 typedef enum 
@@ -98,7 +107,6 @@ MmcStatus ssc_parser_read_int
 
 //////////////////////////////////////
 //String management
-void ssc_parser_strbuf_begin(SscParser *parser);
 void ssc_parser_strbuf_add(SscParser *parser, const char *str);
 MmcStatus ssc_parser_strbuf_add_by_num
 	(SscParser *parser, int base, const char *matched_text);

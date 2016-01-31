@@ -39,6 +39,8 @@
 #include <ctype.h>
 
 #define parser (ssc_yyget_extra(yyscanner))
+#define YYSTYPE SscYYSType
+
 %}
 
 

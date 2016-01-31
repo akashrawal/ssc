@@ -20,7 +20,7 @@
 
 %define api.value.type {SscYYSType}
 %define api.pure full
-%name-prefix "ssc_yy"
+%define api.prefix {ssc_yy}
 %param {yyscan_t yyscanner}
 %parse-param {SscParser *parser}
 %defines
@@ -68,7 +68,6 @@
 
 %{
 #include <sidc/incl.h>
-#include "lex.yy.h"
 
 //Fundamental type
 #define ssc_ftype(lhs, tfid) \

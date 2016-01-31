@@ -35,7 +35,7 @@ typedef struct _SscSymbol SscSymbol;
 //Base type
 typedef enum
 {
-	SSC_TYPE_FUNDAMENTAL_NONE = 0,
+	SSC_TYPE_FUNDAMENTAL_NONE = 0, //< Not fundamental type
 	SSC_TYPE_FUNDAMENTAL_INT8,
 	SSC_TYPE_FUNDAMENTAL_INT16,
 	SSC_TYPE_FUNDAMENTAL_INT32,
@@ -69,12 +69,11 @@ typedef struct
 #define ssc_type_is_fundamental(typeptr) ((typeptr)->sym ? 1 : 0)
 
 //Variable
-typedef struct _SscVar SscVar;
-struct _SscVar
+typedef struct
 {
 	SscType type;
 	char name[];
-};
+} SscVar;
 
 //Function
 typedef struct
@@ -85,25 +84,24 @@ typedef struct
 } SscFn;
 
 //Structure
-typedef struct _SscStruct SscStruct;
-struct _SscStruct
+typedef struct 
 {
 	SscVar **fields;
 	size_t fields_len;
-};
+} SscStruct;
 
 //interface
-typedef struct _SscInterface SscInterface;
-struct _SscInterface
+typedef struct 
 {
 	SscSymbol *parent;
 	SscFn **fns;
 	size_t fns_len;
-};
+} SscInterface;
 
 //Integer constant
 typedef int64_t ssc_integer;
 
+///////////////
 //Symbol database interface
 typedef enum
 {

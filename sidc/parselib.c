@@ -22,6 +22,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <errno.h>
 //LATER: refactor all includes
 
 typedef struct 
@@ -106,6 +107,8 @@ void ssc_parser_log
 	vfprintf(parser->log, fmt, arglist);
 	va_end(arglist);
 	
+	fprintf(parser->log, "\n");
+	
 	parser->count[type]++;
 }
 
@@ -124,6 +127,8 @@ static void ssc_parser_summarise_log(SscParser *parser)
 			fprintf(parser->log, "%s%d %s(s)", 
 				i ? ", " : "", i, log_msg[i]);
 	}
+	
+	fprintf(parser->log, "\n");
 }
 
 //Allocates intermediate semantic structures
@@ -580,10 +585,6 @@ static void ssc_parser_destroy(SscParser *parser)
 	
 	free(parser);
 }
-
-//Bison and Lex interface
-#include "lex.yy.h"
-#include "parser.tab.h"
 
 //Interface presented by parser
 //All errors and warnings are printed to log stream.
