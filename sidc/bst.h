@@ -25,8 +25,7 @@ mmc_rc_declare(SscBst, ssc_bst)
 
 SscBst *ssc_bst_new();
 
-//returns 1 when succeds
-int ssc_bst_insert(SscBst *bst, const char *key, void *value);
+MmcStatus ssc_bst_insert(SscBst *bst, const char *key, void *value);
 
 void *ssc_bst_lookup(SscBst *bst, const char *key);
 

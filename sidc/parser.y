@@ -18,12 +18,12 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-%{
-#include <sidc/incl.h>
-%}
-
-%define api.value.type {void *}
+%define api.value.type {SscYYSType}
 %define api.pure full
+%name-prefix "ssc_yy"
+%param {yyscan_t yyscanner}
+%parse-param {SscParser *parser}
+%defines
 
 //Punctuation and operators
 %token LCURLY
@@ -66,6 +66,25 @@
 %token VAL_STRING
 %token VAL_NUM
 
+%{
+#include <sidc/incl.h>
+#include "lex.yy.h"
+
+//Fundamental type
+#define ssc_ftype(lhs, tfid) \
+	do { \
+		lhs.xtype.sym = NULL; \
+		lhs.xtype.fid = SSC_TYPE_FUNDAMENTAL_ ## tfid; \
+		lhs.xtype.complexity = SSC_TYPE_NONE; \
+	} while(0)
+
+static void ssc_yyerror
+	(yyscan_t yyscanner, SscParser *parser, const char *str)
+{
+	ssc_parser_error(parser, "%s", str);
+}
+
+%}
 
 %%
 
@@ -81,104 +100,199 @@ def: struct
 	;
 
 //Structure
-struct: KW_STRUCT VAL_ID LCURLY field_list RCURLY
+struct: KW_STRUCT VAL_ID LCURLY field_list RCURLY {
+			if (ssc_parser_add_struct(parser, $2.xstr, $4.xrl)
+				!= MMC_SUCCESS)
+				YYABORT;
+		}
 	;
 
-field_list: %empty
-	| field_list field_def
+field_list: %empty { $$.xrl = NULL; }
+	| field_list_open SC { $$.xrl = $1.xrl; }
 	;
 
-field_def: type field_ids SC
-	;
-
-field_ids: VAL_ID
-	| field_ids COMMA VAL_ID
+field_list_open: field_list type VAL_ID { 
+			SscVar *var = ssc_parser_new_var
+				(parser, $2.xtype, $3.xstr);
+			$$.xrl = ssc_parser_rlist_prepend
+				(parser, $1.xrl, var);
+		}
+	| field_list_open COMMA VAL_ID {
+			SscVar *var = ssc_parser_new_var
+				(parser, $1.xrl->d.xvar->type, $3.xstr);
+			$$.xrl = ssc_parser_rlist_prepend
+				(parser, $1.xrl, var);
+		}
 	;
 
 //Interface
-interface: KW_INTERFACE VAL_ID LCURLY fn_list RCURLY
-	| KW_INTERFACE VAL_ID COLON VAL_ID LCURLY fn_list RCURLY
+interface: KW_INTERFACE VAL_ID LCURLY fn_list RCURLY {
+			if (ssc_parser_add_interface
+						(parser, $2.xstr, NULL, $4.xrl)
+					!= MMC_SUCCESS)
+				YYABORT;
+		}
+	| KW_INTERFACE VAL_ID COLON VAL_ID LCURLY fn_list RCURLY{
+			if (ssc_parser_add_interface
+						(parser, $2.xstr, $4.xstr, $6.xrl)
+					!= MMC_SUCCESS)
+				YYABORT;
+		}
 	;
 	
-fn_list: %empty
-	| fn_list fn_def
+fn_list: %empty { $$.xrl = NULL; }
+	| fn_list fn_def {
+			$$.xrl = ssc_parser_rlist_prepend
+				(parser, $1.xrl, $2.xfn);
+		}
 	;
 
-fn_def: VAL_ID LPAREN args RPAREN SC
-	| VAL_ID LPAREN args RPAREN colon LPAREN args RPAREN SC
+fn_def: VAL_ID LPAREN args RPAREN SC {
+			$$.xfn = ssc_parser_new_fn
+				(parser, $1.xstr, $3.xrl, NULL);
+		}
+	| VAL_ID LPAREN args RPAREN COLON LPAREN args RPAREN SC {
+			$$.xfn = ssc_parser_new_fn
+				(parser, $1.xstr, $3.xrl, $7.xrl);
+		}
 	;
 
-args: %empty
-	| arg_def
-	| args COMMA arg_def
+args : %empty { $$.xrl = NULL; }
+	| args_nonempty { $$.xrl = $1.xrl; }
 	;
 
-arg_def: type arg_ids
-	;
-
-arg_ids: VAL_ID
-	| arg_ids VAL_ID
+args_nonempty: type VAL_ID { 
+			SscVar *var = ssc_parser_new_var
+				(parser, $1.xtype, $2.xstr);
+			$$.xrl = ssc_parser_rlist_prepend
+				(parser, NULL, var);
+		}
+	| args_nonempty VAL_ID {
+			SscVar *var = ssc_parser_new_var
+				(parser, $1.xrl->d.xvar->type, $2.xstr);
+			$$.xrl = ssc_parser_rlist_prepend
+				(parser, $1.xrl, var);
+		}
+	| args_nonempty COMMA type VAL_ID { 
+			SscVar *var = ssc_parser_new_var
+				(parser, $3.xtype, $4.xstr);
+			$$.xrl = ssc_parser_rlist_prepend
+				(parser, $1.xrl, var);
+		}
 	;
 
 //Reference
-ref: KW_REF string_exp
+ref: KW_REF string_exp {
+			if (ssc_parser_exec_ref(parser, $2.xstr) != MMC_SUCCESS)
+				YYABORT;
+		}
 
 //Constants
-constant: KW_INTEGER VAL_ID EQUAL integer_exp
-	| KW_STRING VAL_ID EQUAL string_exp
+constant: KW_INTEGER VAL_ID EQUAL integer_exp {
+			if (ssc_parser_add_integer_constant
+						(parser, $2.xstr, $4.xint)
+					!= MMC_SUCCESS)
+				YYABORT;
+		}
+	| KW_STRING VAL_ID EQUAL string_exp {
+			if (ssc_parser_add_string_constant
+						(parser, $2.xstr, $4.xstr)
+					!= MMC_SUCCESS)
+				YYABORT;
+		}
 	;
 
 //Types
-type: base_type
-	| KW_ARRAY lparen integer_exp rparen base_type
-	| KW_SEQ base_type
-	| KW_OPTIONAL base_type
+type: base_type { $$.xtype = $1.xtype; }
+	| KW_ARRAY LPAREN integer_exp RPAREN base_type {
+			if ($3.xint <= 0)
+			{
+				ssc_parser_error(parser, "Array size should be > 0");
+				YYABORT;
+			}
+			$$.xtype = $5.xtype;
+			$5.xtype.complexity = $3.xint;
+		}
+	| KW_SEQ base_type { 
+			$$.xtype = $2.xtype; 
+			$$.xtype.complexity = SSC_TYPE_SEQ;
+		} 
+	| KW_OPTIONAL base_type { 
+			$$.xtype = $2.xtype; 
+			$$.xtype.complexity = SSC_TYPE_OPTIONAL;
+		} 
 	;
 
-base_type: KW_INT8
-	| KW_INT16
-	| KW_INT32
-	| KW_INT64
-	| KW_UINT8
-	| KW_UINT16
-	| KW_UINT32
-	| KW_UINT64
-	| KW_FLT32
-	| KW_FLT64
-	| KW_STRING
-	| KW_MSG
-	| VAL_ID
+base_type: KW_INT8 { ssc_ftype($$, INT8); }
+	| KW_INT16 { ssc_ftype($$, INT16); }
+	| KW_INT32 { ssc_ftype($$, INT32); }
+	| KW_INT64 { ssc_ftype($$, INT64); }
+	| KW_UINT8 { ssc_ftype($$, UINT8); }
+	| KW_UINT16 { ssc_ftype($$, UINT16); }
+	| KW_UINT32 { ssc_ftype($$, UINT32); }
+	| KW_UINT64 { ssc_ftype($$, UINT64); }
+	| KW_FLT32 { ssc_ftype($$, FLT32); }
+	| KW_FLT64 { ssc_ftype($$, FLT64); }
+	| KW_STRING { ssc_ftype($$, STRING); }
+	| KW_MSG { ssc_ftype($$, MSG); }
+	| VAL_ID { 
+			SscSymbol *sym = ssc_parser_lookup_expecting
+				(parser, $1.xstr, SSC_SYMBOL_STRUCT);
+			if (! sym)
+				YYABORT;
+			
+			$$.xtype.sym = sym;
+			$$.xtype.fid = SSC_TYPE_FUNDAMENTAL_NONE;
+			$$.xtype.complexity = SSC_TYPE_NONE;
+		}
 	;
 
 //Integer expressions
-integer_exp: sum
+integer_exp: sum { $$.xint = $1.xint; }
 	;
 
-sum: product
-	| sum PLUS product
-	| sum MINUS product
+sum: product { $$.xint = $1.xint; }
+	| sum PLUS product { $$.xint = $1.xint + $3.xint; }
+	| sum MINUS product { $$.xint = $1.xint - $3.xint; }
 	;
 
-product: integer_val
-	| product MULT integer_val
-	| product DIV integer_val
-	| product MOD integer_val
+product: integer_val { $$.xint = $1.xint; }
+	| product MULT integer_val { $$.xint = $1.xint * $3.xint; }
+	| product DIV integer_val { $$.xint = $1.xint / $3.xint; }
+	| product MOD integer_val { $$.xint = $1.xint % $3.xint; }
 	;
 	
-integer_val: VAL_INT
-	| VAL_ID
+integer_val: VAL_NUM { $$.xint = $1.xint; }
+	| VAL_ID { 
+			SscSymbol *sym = ssc_parser_lookup_expecting
+				(parser, $1.xstr, SSC_SYMBOL_INTEGER);
+			if (! sym)
+				YYABORT;
+			
+			$$.xint = sym->v.xint;
+		}
 	| LPAREN integer_exp RPAREN
 	| MINUS integer_val
 	;
 
 //String expressions
-string_exp: string_val
-	| string_exp string_val
+string_exp: string_val { $$.xstr = $1.xstr; }
+	| string_exp string_val { $$.xstr = ssc_parser_strcat(parser, $1.xstr, $2.xstr); }
 	;
 
-string_val: VAL_STRING
-	| VAL_ID
+string_val: VAL_STRING { $$.xstr = $1.xstr; }
+	| VAL_ID {
+			SscSymbol *sym = ssc_parser_lookup_expecting
+				(parser, $1.xstr, SSC_SYMBOL_STRING);
+			if (! sym)
+				YYABORT;
+			
+			$$.xstr = sym->v.xstr;
+		}
+			
 	;
 
 %%
+
+
 

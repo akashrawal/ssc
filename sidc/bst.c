@@ -165,19 +165,21 @@ static BstNode *insert_rec(BstNode *node, BstNode *new_node)
 	return node;
 }
 
-int ssc_bst_insert(SscBst *bst, const char *key, void *value)
+MmcStatus ssc_bst_insert(SscBst *bst, const char *key, void *value)
 {	
-	BstNode *new_node = bst_node_new(key, value);
+	if (! value)
+		ssc_error("Null values are prohibited");
 	
+	BstNode *new_node = bst_node_new(key, value);
 	BstNode *new_root = insert_rec(bst->root, new_node);
 	if (! new_root)
 	{
 		free(new_node);
-		return 0;
+		return MMC_FAILURE;
 	}
 	bst->root = new_root;
 	
-	return 1;
+	return MMC_SUCCESS;
 }
 
 void *ssc_bst_lookup(SscBst *bst, const char *key)

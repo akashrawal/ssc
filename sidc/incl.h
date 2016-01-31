@@ -23,4 +23,6 @@
 
 //Include all headers
 #include "bst.h"
+#include "symbol.h"
+#include "parselib.h"
 

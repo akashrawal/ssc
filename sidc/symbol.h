@@ -21,10 +21,10 @@
 //Allocator for semantic objects
 typedef struct _SscAllocator SscAllocator;
 
-mmc_rc_declare(SscAllocator, ssc_allocator);
+mmc_rc_declare(SscAllocator, ssc_allocator)
 
 SscAllocator *ssc_allocator_new();
-void *ssc_allocator_alloc();
+void *ssc_allocator_alloc(SscAllocator *allocator, size_t size);
 
 /////////////////////
 //Symbol table
@@ -35,6 +35,7 @@ typedef struct _SscSymbol SscSymbol;
 //Base type
 typedef enum
 {
+	SSC_TYPE_FUNDAMENTAL_NONE = 0,
 	SSC_TYPE_FUNDAMENTAL_INT8,
 	SSC_TYPE_FUNDAMENTAL_INT16,
 	SSC_TYPE_FUNDAMENTAL_INT32,
@@ -53,7 +54,7 @@ typedef enum
 {
 	SSC_TYPE_OPTIONAL = -2,
 	SSC_TYPE_SEQ = -1,
-	SSC_TYPE_NORMAL = 0
+	SSC_TYPE_NONE = 0
 	//and > 0 for array
 } SscTypeComplexity;
 
@@ -62,7 +63,7 @@ typedef struct
 {
 	SscSymbol *sym;
 	SscTypeFundamentalID fid; //If sym is not null this is invalid
-	int complexity
+	int complexity;
 } SscType;
 
 #define ssc_type_is_fundamental(typeptr) ((typeptr)->sym ? 1 : 0)
@@ -72,50 +73,66 @@ typedef struct _SscVar SscVar;
 struct _SscVar
 {
 	SscType type;
-	SscVar *next;
-	char name[];
-};
-
-//Structure
-typedef struct _SscStruct SscStruct;
-struct _SscStruct
-{
-	SscSemStr *name;
-	SscVar *fields;
 	char name[];
 };
 
 //Function
 typedef struct
 {	
-	SscVar *in, *out;
+	SscVar **in, **out;
+	size_t in_len, out_len;
 	char name[];
 } SscFn;
 
-//interface
-typedef struct _SscIface SscIface;
-struct _SscIface
+//Structure
+typedef struct _SscStruct SscStruct;
+struct _SscStruct
 {
-	SscIface *parent;
-	SscFn *fns;
-	char name[];
+	SscVar **fields;
+	size_t fields_len;
 };
 
+//interface
+typedef struct _SscInterface SscInterface;
+struct _SscInterface
+{
+	SscSymbol *parent;
+	SscFn **fns;
+	size_t fns_len;
+};
+
+//Integer constant
+typedef int64_t ssc_integer;
+
 //Symbol database interface
+typedef enum
+{
+	SSC_SYMBOL_STRUCT,
+	SSC_SYMBOL_INTERFACE,
+	SSC_SYMBOL_STRING,
+	SSC_SYMBOL_INTEGER
+} SscSymbolType;
+
 struct _SscSymbol
 {
 	SscSymbol *next;
 	
-	char *name;
-	//Only one of the following is not null
-	SscStruct *sym_struct;
-	SscIface *sym_iface;
+	SscSymbolType type;
+	union 
+	{
+		SscStruct xstruct;
+		SscInterface xiface;
+		char *xstr;
+		ssc_integer xint;
+	} v;
+	
+	char name[];
 };
 
 //File states
 typedef enum
 {
-	SSC_FILE_NOT_PARSED,
+	SSC_FILE_UNREC,
 	SSC_FILE_PARSING,
 	SSC_FILE_PARSED,
 	SSC_FILE_BAD
@@ -123,7 +140,7 @@ typedef enum
 
 typedef struct 
 {
-	char *name;
+	//Symbols should be allocated by the allocator
 	SscSymbol *list;
 	SscAllocator *allocator;
 } SscFileData;
@@ -133,6 +150,12 @@ typedef struct _SscSymbolDB SscSymbolDB;
 mmc_rc_declare(SscSymbolDB, ssc_symbol_db)
 
 SscSymbolDB *ssc_symbol_db_new();
+	
+SscFileState ssc_symbol_db_get_file_state
+	(SscSymbolDB *db, const char *filename);
+	
+SscFileData ssc_symbol_db_get_file_data
+	(SscSymbolDB *db, const char *filename);
 
 void ssc_symbol_db_register_file_parsing
 	(SscSymbolDB *db, const char *filename);
@@ -142,14 +165,7 @@ void ssc_symbol_db_register_file_parsed
 	
 void ssc_symbol_db_register_file_bad
 	(SscSymbolDB *db, const char *filename);
-	
-SscFileState ssc_symbol_db_get_file_state
-	(SscSymbolDB *db, const char *filename);
-	
-SscFileData ssc_symbol_db_get_file_data
-	(SscSymbolDB *db, const char *filename);
 
 SscSymbol *ssc_symbol_db_lookup(SscSymbolDB *db, const char *name);
 
-SscSymbol *ssc_symbol_db_list_by_file
-	(SscSymbolDB *db, const char *filename);
+

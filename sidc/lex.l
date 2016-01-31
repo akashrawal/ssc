@@ -18,30 +18,44 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-%option prefix=ssc_yy
+%option outfile="lex.yy.c"
+%option header-file="lex.yy.h"
+%option prefix="ssc_yy"
+%option batch
+%option never-interactive
 %option reentrant
+%option noyywrap
+%option extra-type = "SscParser *"
+%option bison-bridge
+%option nounistd
 
 %x COMMENT STRING
 
 %{
 #include <sidc/incl.h>
 #include "parser.tab.h"
+
+#include <string.h>
+#include <ctype.h>
+
+#define parser (ssc_yyget_extra(yyscanner))
 %}
 
 
 %%
 
-//Comments
+	/*Comments*/
 "/*" { BEGIN(COMMENT); }
-<COMMENT>"/*" { /*Warn about / * in comment*/ }
+<COMMENT>"/*" { ssc_parser_warn(parser, "/* within comment"); }
 <COMMENT>"*/" { BEGIN(INITIAL); }
+<COMMENT>[^\*]* { /*Do nothing*/ }
 <COMMENT>. { /*Do nothing*/ }
 "//"[^\n]* { /*Do nothing*/ }
 
-//Whitespace
+	/*Whitespace*/
 [ \t\n]* { /*do nothing*/ }
 
-//Punctuation and operators
+	/*Punctuation and operators*/
 "{" { return LCURLY; }
 "}" { return RCURLY; }
 "(" { return LPAREN; }
@@ -56,7 +70,7 @@
 "%" { return MOD; }
 "=" { return EQUAL; }
 
-//Keywords
+	/*Keywords*/
 "int8" { return KW_INT8; }
 "int16" { return KW_INT16; }
 "int32" { return KW_INT32; }
@@ -78,30 +92,39 @@
 "integer" { return KW_INTEGER; }
 
 
-//Terminal symbols with valuable lexemes
-[A-Za-z_][A-Za-z0-9_]* { return VAL_ID; }
-"0x"[0-9A-Fa-f]+ { return VAL_NUM; }
-"0"[0-7]+ {return VAL_NUM; }
-[0-9]+ { return VAL_NUM; }
+	/*Terminal symbols with valuable lexemes*/
+[A-Za-z_][A-Za-z0-9_]* { 
+	yylval->xstr = ssc_parser_strdup(parser, yytext);
+	return VAL_ID; 
+}
 
-//String
+[0-9][A-Za-z0-9_]* {
+	if (ssc_parser_read_int(parser, yytext, &(yylval->xint)) 
+			!= MMC_SUCCESS)
+		return -1;
+	return VAL_NUM;
+}
+
+	/*String*/
 "\"" { BEGIN(STRING); }
-//Backslash escaped characters
-<STRING>"\\\"" { /*append " */ }
-<STRING>"\\\\" { /*append \ */ }
-<STRING>"\\a" { /*append \a*/ }
-<STRING>"\\b" { /*append \b*/ }
-<STRING>"\\f" { /*append \f*/ }
-<STRING>"\\n" { /*append \n*/ }
-<STRING>"\\r" { /*append \r*/ }
-<STRING>"\\t" { /*append \t*/ }
-<STRING>"\\v" { /*append \v*/ }
-<STRING>"\\"[0-7]{1-3} { /*append indicated character*/ }
-<STRING>"\\x"[0-9a-fA-F]{1-2} { /*append indicated character*/ }
-<STRING>"\"" { BEGIN(INITIAL); return VAL_STRING; }
+	/*Backslash escaped characters*/
+<STRING>"\\\"" { ssc_parser_strbuf_add(parser, "\""); }
+<STRING>"\\\\" { ssc_parser_strbuf_add(parser, "\\"); }
+<STRING>"\\a" { ssc_parser_strbuf_add(parser, "\a"); }
+<STRING>"\\b" { ssc_parser_strbuf_add(parser, "\b"); }
+<STRING>"\\f" { ssc_parser_strbuf_add(parser, "\f"); }
+<STRING>"\\n" { ssc_parser_strbuf_add(parser, "\n"); }
+<STRING>"\\r" { ssc_parser_strbuf_add(parser, "\r"); }
+<STRING>"\\t" { ssc_parser_strbuf_add(parser, "\t"); }
+<STRING>"\\v" { ssc_parser_strbuf_add(parser, "\v"); }
+<STRING>"\\"[0-7]{1,3} { ssc_parser_strbuf_add_by_num(parser, 8, yytext); }
+<STRING>"\\x"[0-9a-fA-F]{1,2} { ssc_parser_strbuf_add_by_num(parser, 16, yytext); }
+<STRING>"\"" { BEGIN(INITIAL); yylval->xstr = ssc_parser_strbuf_end(parser); return VAL_STRING; }
+<STRING>. { ssc_parser_strbuf_add(parser, yytext); }
 
-//Error
-. { /*Unrecognised character $yytext*/ }
+	/*Error*/
+. { ssc_parser_warn(parser, "Unrecognised character %s", yytext); 
+	return -1; }
 
 %%
 
