@@ -7,7 +7,8 @@ bin_PROGRAMS = sidc
 sidc_SOURCES = incl.h \
 	bst.c         bst.h \
 	symbol.c      symbol.h \
-	parselib.c    parselib.h 
+	parselib.c    parselib.h \
+	sequencer.c   sequencer.h 
 
 nodist_sidc_SOURCES = $(gen)
 CLEANFILES = $(gen)

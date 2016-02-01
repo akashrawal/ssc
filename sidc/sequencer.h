@@ -1,5 +1,5 @@
-/* incl.h
- * Headers
+/* sequencer.h
+ * Determines the sequence of symbol declarations in generated code
  * 
  * Copyright 2015 Akash Rawal
  * This file is part of Modular Middleware.
@@ -18,12 +18,11 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//Dependencies
-#include <ssc/ssc.h>
+typedef struct
+{
+	size_t len;
+	SscSymbol *d[];
+} SscSymbolArray;
 
-//Include all headers
-#include "bst.h"
-#include "symbol.h"
-#include "parselib.h"
-#include "sequencer.h"
-
+SscSymbolArray *ssc_compute_sequence
+	(SscSymbolDB *db, const char *filename);
