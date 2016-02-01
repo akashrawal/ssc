@@ -196,10 +196,18 @@ SscSymbol *ssc_parser_lookup_expecting
 	SscSymbol *sym = ssc_parser_lookup(parser, name);
 	
 	if (! sym)
+	{
+		ssc_parser_error(parser, "%s not defined in current scope",
+			name);
 		return NULL;
+	}
 	
 	if (sym->type != type)
+	{
+		ssc_parser_error(parser, "%s was expected to be %s",
+			ssc_symbol_names[type]);
 		return NULL;
+	}
 	
 	return sym;
 }
@@ -502,11 +510,22 @@ SscFn *ssc_parser_new_fn(SscParser *parser,
 MmcStatus ssc_parser_add_interface(SscParser *parser, 
 	const char *name, const char *parent, SscRList *fns)
 {
-	SscSymbol *sym;
+	SscSymbol *sym, *psym;
+	
+	if (parent)
+	{
+		psym = ssc_parser_lookup_expecting
+			(parser, parent, SSC_SYMBOL_INTERFACE);
+		if (psym == NULL)
+			return MMC_FAILURE;
+	}
+	else
+		psym = NULL;
 	
 	sym = ssc_parser_alloc_symbol(parser, name, SSC_SYMBOL_INTERFACE);
 	if (! sym)
 		return MMC_FAILURE;
+	sym->v.xiface.parent = psym;
 	
 	if (ssc_parser_rlist_to_array_checked
 			(parser, fns, offsetof(SscFn, name), 

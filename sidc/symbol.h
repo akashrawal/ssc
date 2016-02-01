@@ -105,11 +105,13 @@ typedef int64_t ssc_integer;
 //Symbol database interface
 typedef enum
 {
-	SSC_SYMBOL_STRUCT,
-	SSC_SYMBOL_INTERFACE,
-	SSC_SYMBOL_STRING,
-	SSC_SYMBOL_INTEGER
+	SSC_SYMBOL_STRUCT = 0,
+	SSC_SYMBOL_INTERFACE = 1,
+	SSC_SYMBOL_STRING = 2,
+	SSC_SYMBOL_INTEGER = 3
 } SscSymbolType;
+
+extern const char *ssc_symbol_names[];
 
 struct _SscSymbol
 {

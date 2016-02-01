@@ -77,6 +77,14 @@ static void ssc_allocator_destroy(SscAllocator *allocator)
 /////////////////////
 //Symbol table
 
+extern const char *ssc_symbol_names[] = 
+{
+	"struct",
+	"interface",
+	"string",
+	"integer"
+};
+
 typedef struct _SscFileList SscFileList;
 struct _SscFileList 
 {

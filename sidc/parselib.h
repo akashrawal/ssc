@@ -95,8 +95,8 @@ SscSymbol *ssc_parser_alloc_symbol
 //Searches for a symbol within references, returns NULL if fails
 SscSymbol *ssc_parser_lookup(SscParser *parser, const char *name);
 
-//Searches for a symbol, checks its type, and prints a message 
-//if type does not match
+//Searches for a symbol, checks its type, and prints reasonable 
+//message if anything goes wrong (apart from returning NULL)
 SscSymbol *ssc_parser_lookup_expecting
 	(SscParser *parser, const char *name, SscSymbolType type);
 
