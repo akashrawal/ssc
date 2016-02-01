@@ -24,5 +24,13 @@ typedef struct
 	SscSymbol *d[];
 } SscSymbolArray;
 
-SscSymbolArray *ssc_compute_sequence
-	(SscSymbolDB *db, const char *filename);
+typedef struct _SscSequencer SscSequencer;
+
+SscSequencer *ssc_sequencer_new(SscSymbolDB *db);
+
+void ssc_sequencer_process_symbol(SscSequencer *seqr, SscSymbol *sym);
+
+void ssc_sequencer_process_file(SscSequencer *seqr, const char *filename);
+
+SscSymbolArray *ssc_sequencer_destroy(SscSequencer *seqr);
+

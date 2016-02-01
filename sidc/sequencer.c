@@ -20,19 +20,23 @@
  
 #include "incl.h"
 
-typedef struct
+struct _SscSequencer
 {
 	SscSymbolDB *db;
 	SscBst *index;
 	SscSymbolArray *r;
 	size_t len, alloc_len;
-} SscSequencer;
+};
 
 #define ssc_array_sizeof(n) \
 	(sizeof(SscSymbolArray) + ((n) * sizeof(void *)))
 
-static void ssc_sequencer_init(SscSequencer *seqr, SscSymbolDB *db)
+SscSequencer *ssc_sequencer_init(SscSymbolDB *db)
 {
+	SscSequencer *seqr;
+	
+	seqr = mmc_new(SscSequencer);
+	
 	seqr->db = db;
 	ssc_symbol_db_ref(db);
 	
@@ -40,13 +44,8 @@ static void ssc_sequencer_init(SscSequencer *seqr, SscSymbolDB *db)
 	seqr->len = 0;
 	seqr->alloc_len = 16;
 	seqr->r = mmc_alloc(ssc_array_sizeof(seqr->alloc_len));
-}
-
-static SscSymbolArray *ssc_sequencer_destroy(SscSequencer *seqr)
-{
-	ssc_symbol_db_unref(seqr->db);
-	ssc_bst_unref(seqr->index);
-	return seqr->r;
+	
+	return seqr;
 }
 
 static void ssc_sequencer_append_to_array
@@ -65,9 +64,6 @@ static void ssc_sequencer_append_to_array
 	ssc_bst_insert(seqr->index, sym->name, sym);
 }
 
-static void ssc_sequencer_process_symbol
-	(SscSequencer *seqr, SscSymbol *sym);
-
 static void ssc_sequencer_process_varlist
 	(SscSequencer *seqr, SscVar **vars, size_t vars_len)
 {
@@ -80,8 +76,7 @@ static void ssc_sequencer_process_varlist
 	}
 }
 
-static void ssc_sequencer_process_symbol
-	(SscSequencer *seqr, SscSymbol *sym)
+void ssc_sequencer_process_symbol(SscSequencer *seqr, SscSymbol *sym)
 {
 	//Check the index
 	void *index_entry;
@@ -121,21 +116,25 @@ static void ssc_sequencer_process_symbol
 	ssc_sequencer_append_to_array(seqr, sym);
 }
 
-SscSymbolArray *ssc_compute_sequence
-	(SscSymbolDB *db, const char *filename)
+void ssc_sequencer_process_file
+	(SscSequencer *seqr, const char *filename)
 {
-	SscSequencer seqr[1];
 	SscSymbol *iter;
 	SscFileData file_data;
 	
-	ssc_sequencer_init(seqr, db);
-	
-	file_data = ssc_symbol_db_get_file_data(db, filename);
+	file_data = ssc_symbol_db_get_file_data(seqr->db, filename);
 	
 	for (iter = file_data.list; iter; iter = iter->next)
 	{
 		ssc_sequencer_process_symbol(seqr, iter);
 	}
-	
-	return ssc_sequencer_destroy(seqr);
+}
+
+SscSymbolArray *ssc_sequencer_destroy(SscSequencer *seqr)
+{
+	SscSymbolArray *res = seqr->r;
+	ssc_symbol_db_unref(seqr->db);
+	ssc_bst_unref(seqr->index);
+	free(seqr);
+	return res;
 }
