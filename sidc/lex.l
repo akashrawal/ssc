@@ -17,17 +17,25 @@
  * You should have received a copy of the GNU General Public License
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+//TODO: Flex warns that default rule can be matched. How?
 
 %option outfile="lex.yy.c"
 %option header-file="lex.yy.h"
+
 %option prefix="ssc_yy"
-%option batch
-%option never-interactive
 %option reentrant
 %option noyywrap
 %option extra-type = "SscParser *"
 %option bison-bridge
+%option nodefault
+%option warn
+%option nounput
+%option noinput
+
 %option nounistd
+%option batch
+%option never-interactive
 
 %x COMMENT STRING
 

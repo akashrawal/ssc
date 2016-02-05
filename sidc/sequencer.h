@@ -21,7 +21,7 @@
 typedef struct
 {
 	size_t len;
-	SscSymbol *d[];
+	SscSymbol **d;
 } SscSymbolArray;
 
 typedef struct _SscSequencer SscSequencer;
@@ -32,5 +32,5 @@ void ssc_sequencer_process_symbol(SscSequencer *seqr, SscSymbol *sym);
 
 void ssc_sequencer_process_file(SscSequencer *seqr, const char *filename);
 
-SscSymbolArray *ssc_sequencer_destroy(SscSequencer *seqr);
+SscSymbolArray ssc_sequencer_destroy(SscSequencer *seqr);
 

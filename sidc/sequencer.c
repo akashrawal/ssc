@@ -20,16 +20,14 @@
  
 #include "incl.h"
 
+mmc_declare_array(SscSymbol *, SscSymbolVector, ssc_symbol_vector)
+
 struct _SscSequencer
 {
 	SscSymbolDB *db;
 	SscBst *index;
-	SscSymbolArray *r;
-	size_t len, alloc_len;
+	SscSymbolVector vector;
 };
-
-#define ssc_array_sizeof(n) \
-	(sizeof(SscSymbolArray) + ((n) * sizeof(void *)))
 
 SscSequencer *ssc_sequencer_init(SscSymbolDB *db)
 {
@@ -41,27 +39,9 @@ SscSequencer *ssc_sequencer_init(SscSymbolDB *db)
 	ssc_symbol_db_ref(db);
 	
 	seqr->index = ssc_bst_new();
-	seqr->len = 0;
-	seqr->alloc_len = 16;
-	seqr->r = mmc_alloc(ssc_array_sizeof(seqr->alloc_len));
+	ssc_symbol_vector_init(&(seqr->vector));
 	
 	return seqr;
-}
-
-static void ssc_sequencer_append_to_array
-	(SscSequencer *seqr, SscSymbol *sym)
-{
-	//Enlarge array if necessary
-	if (seqr->len == seqr->alloc_len)
-	{
-		seqr->alloc_len *= 2;
-		seqr->r = mmc_realloc
-			(seqr->r, ssc_array_sizeof(seqr->alloc_len));
-	}
-	
-	seqr->r->d[seqr->len] = sym;
-	seqr->len++;
-	ssc_bst_insert(seqr->index, sym->name, sym);
 }
 
 static void ssc_sequencer_process_varlist
@@ -112,8 +92,9 @@ void ssc_sequencer_process_symbol(SscSequencer *seqr, SscSymbol *sym)
 		}
 	}
 	
-	//Indicate that we are done
-	ssc_sequencer_append_to_array(seqr, sym);
+	//We are done. Update datastructures.
+	ssc_bst_insert(seqr->index, sym->name, sym);
+	ssc_symbol_vector_append(&(seqr->vector), sym);
 }
 
 void ssc_sequencer_process_file
@@ -130,11 +111,16 @@ void ssc_sequencer_process_file
 	}
 }
 
-SscSymbolArray *ssc_sequencer_destroy(SscSequencer *seqr)
+SscSymbolArray ssc_sequencer_destroy(SscSequencer *seqr)
 {
-	SscSymbolArray *res = seqr->r;
+	SscSymbolArray res;
+	
+	res.len = ssc_symbol_vector_length(&(seqr->vector));
+	res.d = seqr->vector.data;
+	
 	ssc_symbol_db_unref(seqr->db);
 	ssc_bst_unref(seqr->index);
 	free(seqr);
+	
 	return res;
 }

@@ -25,44 +25,6 @@
 #include <errno.h>
 //LATER: refactor all includes
 
-typedef struct 
-{
-	char *mem;
-	size_t len, alloc_len;
-} StrBuf;
-
-static void strbuf_init(StrBuf *s)
-{
-	s->len = 0;
-	s->alloc_len = 16;
-	s->mem = (char *) mmc_alloc(s->alloc_len);
-}
-
-static void strbuf_add(StrBuf *s, const char *str)
-{
-	size_t str_len = strlen(str);
-	
-	//Enlarge buffer as necessary
-	if (s->len + str_len >= s->alloc_len)
-	{
-		do { s->alloc_len *= 2; }
-		while (s->len + str_len >= s->alloc_len);
-			
-		s->mem = (char *) mmc_realloc(s->mem, s->alloc_len);
-	}
-	
-	//copy
-	memcpy(s->mem + s->len, str, str_len);
-	
-	//update length
-	s->len += str_len;
-}
-
-static void strbuf_destroy(StrBuf *s)
-{
-	free(s->mem);
-}
-
 //Parser
 struct _SscParser
 {
@@ -87,7 +49,7 @@ struct _SscParser
 	int count[SSC_LOG_N];
 	
 	//String buffer
-	StrBuf strbuf;
+	MmcRBuf strbuf;
 	
 	//Filename
 	char filename[];
@@ -284,7 +246,7 @@ MmcStatus ssc_parser_read_int
 
 void ssc_parser_strbuf_add(SscParser *parser, const char *str)
 {
-	strbuf_add(&s, str);
+	mmc_rbuf_append(&s, str, strlen(str));
 }
 
 MmcStatus ssc_parser_strbuf_add_by_num
@@ -306,7 +268,7 @@ MmcStatus ssc_parser_strbuf_add_by_num
 	str[0] = val;
 	str[1] = 0;
 	
-	strbuf_add(&s, str);
+	ssc_parser_strbuf_add(parser, str);
 	
 	return MMC_SUCCESS;
 }
@@ -316,11 +278,11 @@ char *ssc_parser_strbuf_end(SscParser *parser)
 	char *res;
 	
 	res = ssc_parser_alloc_int(parser, s.len + 1);
-	memcpy(res, s.mem, s.len);
+	memcpy(res, s.data, s.len);
 	res[s.len] = 0;
 	
-	strbuf_destroy(&s);
-	strbuf_init(&s);
+	free(s.data);
+	mmc_rbuf_init(&s);
 	
 	return res;
 }
@@ -586,7 +548,7 @@ static SscParser *ssc_parser_new
 	for (i = 0; i < SSC_LOG_N; i++)
 		parser->count[i] = 0;
 	
-	strbuf_init(&(parser->strbuf));
+	mmc_rbuf_init(&(parser->strbuf));
 	
 	strcpy(parser->filename, filename);
 	
@@ -595,7 +557,7 @@ static SscParser *ssc_parser_new
 
 static void ssc_parser_destroy(SscParser *parser)
 {
-	strbuf_destroy(&(parser->strbuf));
+	free(parser->strbuf.data);
 	
 	ssc_allocator_unref(parser->int_alloc);
 	ssc_allocator_unref(parser->final_alloc);
