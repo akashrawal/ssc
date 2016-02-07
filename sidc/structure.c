@@ -21,8 +21,8 @@
 #include "incl.h"
 
 //Writes C code for given structure
-void ssc_struct_gen_code
-	(SscSymbol *value, FILE *h_file, FILE *c_file)
+
+void ssc_struct_gen_declaration(SscSymbol *value, FILE *h_file)
 {
 	SscVarList fields;
 	int i;
@@ -32,7 +32,12 @@ void ssc_struct_gen_code
 	
 	//Separator comment
 	fprintf(h_file, "//%s\n", value->name);
-	fprintf(c_file, "//%s\n", value->name);
+	
+	//Prevent multiple declarations
+	fprintf(h_file, 
+		"#ifndef SSC_STRUCT__%s__DECLARED\n"
+		"#define SSC_STRUCT__%s__DECLARED\n\n",
+		value->name, value->name);
 	
 	//Structure definition
 	fprintf(h_file, "typedef struct\n{\n");
@@ -52,6 +57,56 @@ void ssc_struct_gen_code
 		fprintf(h_file, 
 			"SscDLen %s__count(%s *value);\n\n",
 			value->name, value->name);
+	}
+	
+	//Serialization function
+	fprintf(h_file, 
+		"void %s__write\n"
+		"    (%s *value, SscSegment *seg, SscDStream *dstream);\n\n",
+		value->name, value->name);
+	
+	//Deserialization function
+	fprintf(h_file, 
+		"int %s__read\n"
+		"    (%s *value, SscSegment *seg, SscDStream *dstream);\n\n",
+		value->name, value->name);
+	
+	//Function to free the structure
+	fprintf(h_file, 
+		"void %s__free(%s *value);\n\n",
+		value->name, value->name);
+	
+	//Function to serialize a structure into a message
+	fprintf(h_file, 
+		"MmcMsg *%s__serialize(%s *value);\n\n",
+		value->name, value->name);
+		
+	//Function to deserialize a message to get back structure
+	fprintf(h_file, 
+		"int %s__deserialize(MmcMsg *msg, %s *value);\n\n",
+		value->name, value->name);
+	
+	//Prevent multiple declarations: end
+	fprintf(h_file, 
+		"#endif //SSC_STRUCT__%s__DECLARED\n\n",
+		value->name);
+}
+
+void ssc_struct_gen_code
+	(SscSymbol *value, FILE *c_file)
+{
+	SscVarList fields;
+	
+	//Get details
+	fields = value->v.xstruct.fields;
+	
+	//Separator comment
+	fprintf(c_file, "//%s\n", value->name);
+	
+	if (! fields.constsize)
+	{
+		//Structure is not of constant size, have to write functions
+		
 		fprintf(c_file, 
 			"SscDLen %s__count(%s *value)\n"
 			"{\n"
@@ -66,10 +121,6 @@ void ssc_struct_gen_code
 	}
 	
 	//Serialization function
-	fprintf(h_file, 
-		"void %s__write\n"
-		"    (%s *value, SscSegment *seg, SscDStream *dstream);\n\n",
-		value->name, value->name);
 	fprintf(c_file, 
 		"void %s__write\n"
 		"    (%s *value, SscSegment *seg, SscDStream *dstream)\n"
@@ -81,10 +132,6 @@ void ssc_struct_gen_code
 	fprintf(c_file, "}\n\n");
 	
 	//Deserialization function
-	fprintf(h_file, 
-		"int %s__read\n"
-		"    (%s *value, SscSegment *seg, SscDStream *dstream);\n\n",
-		value->name, value->name);
 	fprintf(c_file, 
 		"int %s__read\n"
 		"    (%s *value, SscSegment *seg, SscDStream *dstream)\n"
@@ -98,9 +145,6 @@ void ssc_struct_gen_code
 	fprintf(c_file, "\n    return -1;\n}\n\n");
 	
 	//Function to free the structure
-	fprintf(h_file, 
-		"void %s__free(%s *value);\n\n",
-		value->name, value->name);
 	fprintf(c_file, 
 		"void %s__free(%s *value)\n"
 		"{\n",
@@ -111,9 +155,6 @@ void ssc_struct_gen_code
 	fprintf(c_file, "}\n\n");
 	
 	//Function to serialize a structure into a message
-	fprintf(h_file, 
-		"MmcMsg *%s__serialize(%s *value);\n\n",
-		value->name, value->name);
 	fprintf(c_file, 
 		"MmcMsg *%s__serialize(%s *value)\n"
 		"{\n"
@@ -153,9 +194,6 @@ void ssc_struct_gen_code
 		value->name);
 	
 	//Function to deserialize a message to get back structure
-	fprintf(h_file, 
-		"int %s__deserialize(MmcMsg *msg, %s *value);\n\n",
-		value->name, value->name);
 	fprintf(c_file, 
 		"int %s__deserialize(MmcMsg *msg, %s *value)\n"
 		"{\n"
