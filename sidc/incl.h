@@ -26,4 +26,5 @@
 #include "symbol.h"
 #include "parselib.h"
 #include "sequencer.h"
+#include "structure.h"
 

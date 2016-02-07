@@ -18,7 +18,7 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
  
-//TODO: Flex warns that default rule can be matched. How?
+/*TODO: Flex warns that default rule can be matched. How?*/
 
 %option outfile="lex.yy.c"
 %option header-file="lex.yy.h"

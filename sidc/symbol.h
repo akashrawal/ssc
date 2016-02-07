@@ -36,19 +36,22 @@ typedef struct _SscSymbol SscSymbol;
 typedef enum
 {
 	SSC_TYPE_FUNDAMENTAL_NONE = 0, //< Not fundamental type
-	SSC_TYPE_FUNDAMENTAL_INT8,
-	SSC_TYPE_FUNDAMENTAL_INT16,
-	SSC_TYPE_FUNDAMENTAL_INT32,
-	SSC_TYPE_FUNDAMENTAL_INT64,
-	SSC_TYPE_FUNDAMENTAL_UINT8,
-	SSC_TYPE_FUNDAMENTAL_UINT16,
-	SSC_TYPE_FUNDAMENTAL_UINT32,
-	SSC_TYPE_FUNDAMENTAL_UINT64,
-	SSC_TYPE_FUNDAMENTAL_FLT32,
-	SSC_TYPE_FUNDAMENTAL_FLT64,
-	SSC_TYPE_FUNDAMENTAL_STRING,
-	SSC_TYPE_FUNDAMENTAL_MSG
+	SSC_TYPE_FUNDAMENTAL_INT8 = 1,
+	SSC_TYPE_FUNDAMENTAL_INT16 = 2,
+	SSC_TYPE_FUNDAMENTAL_INT32 = 3,
+	SSC_TYPE_FUNDAMENTAL_INT64 = 4,
+	SSC_TYPE_FUNDAMENTAL_UINT8 = 5,
+	SSC_TYPE_FUNDAMENTAL_UINT16 = 6,
+	SSC_TYPE_FUNDAMENTAL_UINT32 = 7,
+	SSC_TYPE_FUNDAMENTAL_UINT64 = 8,
+	SSC_TYPE_FUNDAMENTAL_FLT32 = 9,
+	SSC_TYPE_FUNDAMENTAL_FLT64 = 10,
+	SSC_TYPE_FUNDAMENTAL_STRING = 11,
+	SSC_TYPE_FUNDAMENTAL_MSG = 12
 } SscTypeFundamentalID;
+
+extern SscDLen ssc_type_fundamental_sizes[13];
+extern char *ssc_type_fundamental_names[13];
 
 typedef enum
 {
@@ -66,6 +69,11 @@ typedef struct
 	int complexity;
 } SscType;
 
+SscDLen ssc_base_type_calc_base_size(SscType type);
+int ssc_base_type_is_constsize(SscType type);
+SscDLen ssc_type_calc_base_size(SscType type);
+int ssc_type_is_constsize(SscType type);
+
 #define ssc_type_is_fundamental(typeptr) ((typeptr)->sym ? 1 : 0)
 
 //Variable
@@ -75,19 +83,27 @@ typedef struct
 	char name[];
 } SscVar;
 
+typedef struct
+{
+	SscVar **a;
+	size_t len;
+	
+	//Size information, will be calculated by database
+	SscDLen base_size;
+	int constsize;
+} SscVarList;
+
 //Function
 typedef struct
 {	
-	SscVar **in, **out;
-	size_t in_len, out_len;
+	SscVarList in, out;
 	char name[];
 } SscFn;
 
 //Structure
 typedef struct 
 {
-	SscVar **fields;
-	size_t fields_len;
+	SscVarList fields;
 } SscStruct;
 
 //interface

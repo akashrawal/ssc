@@ -429,7 +429,7 @@ MmcStatus ssc_parser_add_struct
 	
 	if (ssc_parser_rlist_to_array_checked
 			(parser, fields, offsetof(SscVar, name), 
-			(void ***) &(sym->v.xstruct.fields), &(sym->v.xstruct.fields_len),
+			(void ***) &(sym->v.xstruct.fields.a), &(sym->v.xstruct.fields.len),
 			"Name clash for field %s in struct %s", name)
 		!= MMC_SUCCESS)
 	{
@@ -449,7 +449,7 @@ SscFn *ssc_parser_new_fn(SscParser *parser,
 	
 	if (ssc_parser_rlist_to_array_checked
 			(parser, args, offsetof(SscVar, name), 
-			(void ***) &(fn->in), &(fn->in_len) ,
+			(void ***) &(fn->in.a), &(fn->in.len) ,
 			"Name clash for argument %s in function %s", name)
 		!= MMC_SUCCESS)
 	{
@@ -458,7 +458,7 @@ SscFn *ssc_parser_new_fn(SscParser *parser,
 	
 	if (ssc_parser_rlist_to_array_checked
 			(parser, out_args, offsetof(SscVar, name), 
-			(void ***) &(fn->out), &(fn->out_len) ,
+			(void ***) &(fn->out.a), &(fn->out.len) ,
 			"Name clash for out-argument %s in function %s", name)
 		!= MMC_SUCCESS)
 	{

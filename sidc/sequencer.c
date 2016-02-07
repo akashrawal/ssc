@@ -79,7 +79,7 @@ void ssc_sequencer_process_symbol(SscSequencer *seqr, SscSymbol *sym)
 	{
 		//For each member
 		ssc_sequencer_process_varlist
-			(seqr, sym->v.xstruct.fields, sym->v.xstruct.fields_len);
+			(seqr, sym->v.xstruct.fields.a, sym->v.xstruct.fields.len);
 	}
 	else if (sym->type == SSC_SYMBOL_INTERFACE)
 	{
@@ -87,8 +87,8 @@ void ssc_sequencer_process_symbol(SscSequencer *seqr, SscSymbol *sym)
 		{
 			SscFn *fn = sym->v.xiface.fns[i];
 			
-			ssc_sequencer_process_varlist(seqr, fn->in, fn->in_len);
-			ssc_sequencer_process_varlist(seqr, fn->out, fn->out_len);
+			ssc_sequencer_process_varlist(seqr, fn->in.a, fn->in.len);
+			ssc_sequencer_process_varlist(seqr, fn->out.a, fn->out.len);
 		}
 	}
 	

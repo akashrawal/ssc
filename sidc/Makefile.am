@@ -8,7 +8,8 @@ sidc_SOURCES = incl.h \
 	bst.c         bst.h \
 	symbol.c      symbol.h \
 	parselib.c    parselib.h \
-	sequencer.c   sequencer.h 
+	sequencer.c   sequencer.h  \
+	structure.c   structure.h
 
 nodist_sidc_SOURCES = $(gen)
 CLEANFILES = $(gen)
