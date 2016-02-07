@@ -22,6 +22,8 @@
 
 #include <stdarg.h>
 
+//TODO: Refactor
+
 //These have to be kept in sync with enum SscTypeFundamentalID
 
 const char *ssc_names[] =
