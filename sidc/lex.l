@@ -17,8 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
-/*TODO: Flex warns that default rule can be matched. How?*/
 
 %option outfile="lex.yy.c"
 %option header-file="lex.yy.h"
@@ -37,8 +35,6 @@
 %option batch
 %option never-interactive
 
-%x COMMENT STRING
-
 %{
 #include <sidc/incl.h>
 #include "parser.tab.h"
@@ -55,11 +51,7 @@
 %%
 
 	/*Comments*/
-"/*" { BEGIN(COMMENT); }
-<COMMENT>"/*" { ssc_parser_warn(parser, "/* within comment"); }
-<COMMENT>"*/" { BEGIN(INITIAL); }
-<COMMENT>[^\*]* { /*Do nothing*/ }
-<COMMENT>. { /*Do nothing*/ }
+"/*"(([^*])|("*"[^/]))*"*/" { /*Do nothing*/ }
 "//"[^\n]* { /*Do nothing*/ }
 
 	/*Whitespace*/
@@ -115,22 +107,12 @@
 	return VAL_NUM;
 }
 
-	/*String*/
-"\"" { BEGIN(STRING); }
-	/*Backslash escaped characters*/
-<STRING>"\\\"" { ssc_parser_strbuf_add(parser, "\""); }
-<STRING>"\\\\" { ssc_parser_strbuf_add(parser, "\\"); }
-<STRING>"\\a" { ssc_parser_strbuf_add(parser, "\a"); }
-<STRING>"\\b" { ssc_parser_strbuf_add(parser, "\b"); }
-<STRING>"\\f" { ssc_parser_strbuf_add(parser, "\f"); }
-<STRING>"\\n" { ssc_parser_strbuf_add(parser, "\n"); }
-<STRING>"\\r" { ssc_parser_strbuf_add(parser, "\r"); }
-<STRING>"\\t" { ssc_parser_strbuf_add(parser, "\t"); }
-<STRING>"\\v" { ssc_parser_strbuf_add(parser, "\v"); }
-<STRING>"\\"[0-7]{1,3} { ssc_parser_strbuf_add_by_num(parser, 8, yytext); }
-<STRING>"\\x"[0-9a-fA-F]{1,2} { ssc_parser_strbuf_add_by_num(parser, 16, yytext); }
-<STRING>"\"" { BEGIN(INITIAL); yylval->xstr = ssc_parser_strbuf_end(parser); return VAL_STRING; }
-<STRING>. { ssc_parser_strbuf_add(parser, yytext); }
+"\""([^"\n\\]|("\\".))*"\"" { 
+	if (ssc_parser_read_string(parser, yytext, &(yylval->xstr))
+			!= MMC_SUCCESS)
+		return -1;
+	return VAL_STRING;
+}
 
 	/*Error*/
 . { ssc_parser_warn(parser, "Unrecognised character %s", yytext); 

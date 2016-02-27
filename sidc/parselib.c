@@ -48,9 +48,6 @@ struct _SscParser
 	FILE *log;
 	int count[SSC_LOG_N];
 	
-	//String buffer
-	MmcRBuf strbuf;
-	
 	//Filename
 	char filename[];
 };
@@ -176,30 +173,57 @@ SscSymbol *ssc_parser_lookup_expecting
 
 ///////////////////////////////
 //Integer related functions
-static MmcStatus ssc_read_int_with_base
-	(SscParser *parser, int base, const char *matched_text, ssc_integer *res)
+static unsigned int ssc_scan_digit(char ch)
 {
-	ssc_integer val = 0;
+	if (ch >= 'a' && ch <= 'f')
+		return ch - 'a' + 10;
+	else if (ch >= 'A' && ch <= 'F')
+		return ch - 'A' + 10;
+	else if (ch >= '0' && ch <= '9')
+		return ch - '0';
+	else
+		return 16;
+}
+
+MmcStatus ssc_parser_read_int
+	(SscParser *parser, const char *instr, ssc_integer *res)
+{
+	size_t len = strlen(instr);
+	int base = 10;
+	int start = 0;
 	int i;
+	ssc_integer val = 0;
 	
-	//Parse in loop
-	for (i = 0; matched_text[i]; i++)
+	//Find base
+	if (len >= 2)
+	{
+		if (instr[0] == '0' && (instr[1] == 'x' || instr[1] == 'X'))
+		{
+			base = 16;
+			start = 2;
+		}
+	}
+	else if (len >= 1)
+	{
+		if (instr[0] == '0')
+		{
+			base = 8;
+			start = 1;
+		}
+	}
+	
+	for (i = start; instr[i]; i++)
 	{
 		int digit;
 		
-		if (matched_text[i] >= 'a' && matched_text[i] <= 'f')
-			digit = matched_text[i] - 'a' + 10;
-		else if (matched_text[i] >= 'A' && matched_text[i] <= 'F')
-			digit = matched_text[i] - 'A' + 10;
-		else if (matched_text[i] >= '0' && matched_text[i] <= '9')
-			digit = matched_text[i] - '0';
-		else
-			digit = 16;
+		if (instr[i] == '_')
+			continue;
 		
+		digit = ssc_scan_digit(instr[i]);
 		if (digit >= base)
 		{
 			ssc_parser_error(parser, "Unrecognized character %c", 
-				matched_text[i]);
+				instr[i]);
 			return MMC_FAILURE;
 		}
 		
@@ -211,83 +235,8 @@ static MmcStatus ssc_read_int_with_base
 	return MMC_SUCCESS;
 }
 
-MmcStatus ssc_parser_read_int
-	(SscParser *parser, const char *matched_text, ssc_integer *res)
-{
-	size_t len = strlen(matched_text);
-	int base = 10;
-	int start = 0;
-	
-	//Find base
-	if (len >= 2)
-	{
-		if (matched_text[0] == '0' && (matched_text[1] == 'x' || matched_text[1] == 'X'))
-		{
-			base = 16;
-			start = 2;
-		}
-	}
-	else if (len >= 1)
-	{
-		if (matched_text[0] == '0')
-		{
-			base = 8;
-			start = 1;
-		}
-	}
-	
-	return ssc_read_int_with_base(parser, base, matched_text + start, res);
-}
-
 //////////////////////////////////////
 //String Management
-
-#define s (parser->strbuf)
-
-void ssc_parser_strbuf_add(SscParser *parser, const char *str)
-{
-	mmc_rbuf_append(&s, str, strlen(str));
-}
-
-MmcStatus ssc_parser_strbuf_add_by_num
-	(SscParser *parser, int base, const char *matched_text)
-{
-	char str[2];
-	ssc_integer val;
-	
-	if (ssc_read_int_with_base(parser, base, matched_text, &val)
-			!= MMC_SUCCESS)
-		return MMC_FAILURE;
-	
-	if (val == 0)
-	{
-		ssc_parser_error(parser, "Strings cannot contain null bytes");
-		return MMC_FAILURE;
-	}
-		
-	str[0] = val;
-	str[1] = 0;
-	
-	ssc_parser_strbuf_add(parser, str);
-	
-	return MMC_SUCCESS;
-}
-
-char *ssc_parser_strbuf_end(SscParser *parser)
-{
-	char *res;
-	
-	res = ssc_parser_alloc_int(parser, s.len + 1);
-	memcpy(res, s.data, s.len);
-	res[s.len] = 0;
-	
-	free(s.data);
-	mmc_rbuf_init(&s);
-	
-	return res;
-}
-
-#undef s
 
 char *ssc_parser_strdup(SscParser *parser, const char *str)
 {
@@ -311,6 +260,121 @@ char *ssc_parser_strcat
 	strcat(res, str2);
 	
 	return res;
+}
+
+MmcStatus ssc_parser_read_string
+	(SscParser *parser, const char *instr, char **res)
+{
+	int i;
+	MmcRBuf buf[1];
+#define ch (instr[i])
+	
+	mmc_rbuf_init(buf);
+	
+	i = 1; 
+	while (ch != '\"')
+	{
+		if (! ch)
+			ssc_error("Assertion failure (instr = \'%s\')", instr);
+		
+		if (ch == '\\')
+		{
+			i++;
+
+			//Substitution style escape sequences
+#define subst(ech, rpl) \
+			if (ch == ech) \
+			{ \
+				if (rpl) mmc_rbuf_append1(buf, rpl); \
+				i++; \
+				continue; \
+			}
+	
+			subst('\n', 0)
+			subst('\\', '\\')
+			subst('?', '?')
+			subst('\'', '\'')
+			subst('\"', '\"')
+			subst('a', '\a')
+			subst('b', '\b')
+			subst('f', '\f')
+			subst('n', '\n')
+			subst('r', '\r')
+			subst('t', '\t')
+			subst('v', '\v')
+			
+#undef subst
+			
+			//Octal and hex
+#define accept_num(base, max_len) \
+			{ \
+				unsigned int val = 0, lim_ctr = max_len; \
+				while(lim_ctr--) \
+				{ \
+					unsigned int nval; \
+					int digit; \
+					digit = ssc_scan_digit(ch); \
+					if (digit >= base) break; \
+					nval = val * base + digit; \
+					if (nval > 255) break; \
+					val = nval; \
+					i++; \
+				} \
+				if (lim_ctr == max_len) \
+				{ \
+					ssc_parser_error(parser, \
+						"Lexical error in string literal"); \
+					goto fail; \
+				} \
+				if (val == 0) \
+				{ \
+					ssc_parser_error(parser, \
+						"Null characters not allowed in strings"); \
+					goto fail; \
+				} \
+				mmc_rbuf_append1(buf, val); \
+				continue; \
+			}
+				
+			if (ssc_scan_digit(ch) < 8)
+			{
+				accept_num(8, 3)
+			}
+			
+			if (ch == 'x' || ch == 'X')
+			{
+				i++;
+				accept_num(16, 2);
+			}
+			
+#undef accept_num
+
+			//No other escape sequence is valid
+			ssc_parser_error(parser, 
+				"Invalid escape sequence \"\\%c\"", ch);
+			goto fail;
+			
+		}
+		
+		//For everything else
+		mmc_rbuf_append1(buf, ch);
+		i++;
+	}
+	
+	
+	
+#undef ch
+
+	*res = ssc_parser_alloc_int(parser, buf->len + 1);
+	memcpy(*res, buf->data, buf->len);
+	*res[buf->len] = '\0';
+	free(buf->data);
+	return MMC_SUCCESS;
+	
+fail:
+	free(buf->data);
+	return MMC_FAILURE;
+	
 }
 
 
@@ -548,8 +612,6 @@ static SscParser *ssc_parser_new
 	for (i = 0; i < SSC_LOG_N; i++)
 		parser->count[i] = 0;
 	
-	mmc_rbuf_init(&(parser->strbuf));
-	
 	strcpy(parser->filename, filename);
 	
 	return parser;
@@ -557,8 +619,6 @@ static SscParser *ssc_parser_new
 
 static void ssc_parser_destroy(SscParser *parser)
 {
-	free(parser->strbuf.data);
-	
 	ssc_allocator_unref(parser->int_alloc);
 	ssc_allocator_unref(parser->final_alloc);
 	

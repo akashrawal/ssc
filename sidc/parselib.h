@@ -103,17 +103,15 @@ SscSymbol *ssc_parser_lookup_expecting
 ///////////////////////////////
 //Integer related functions
 MmcStatus ssc_parser_read_int
-	(SscParser *parser, const char *matched_text, ssc_integer *res);
+	(SscParser *parser, const char *instr, ssc_integer *res);
 
 //////////////////////////////////////
 //String management
-void ssc_parser_strbuf_add(SscParser *parser, const char *str);
-MmcStatus ssc_parser_strbuf_add_by_num
-	(SscParser *parser, int base, const char *matched_text);
-char *ssc_parser_strbuf_end(SscParser *parser);
 char *ssc_parser_strdup(SscParser *parser, const char *str);
 char *ssc_parser_strcat
 	(SscParser *parser, const char *str1, const char *str2);
+MmcStatus ssc_parser_read_string
+	(SscParser *parser, const char *instr, char **res);
 
 //
 //Integer constant
