@@ -10,7 +10,8 @@ sidc_SOURCES = incl.h \
 	parselib.c    parselib.h \
 	codegen.c     codegen.h \
 	structure.c   structure.h \
-	sequencer.c   sequencer.h 
+	sequencer.c   sequencer.h \
+	main.c
 	
 
 nodist_sidc_SOURCES = $(gen)

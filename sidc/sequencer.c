@@ -29,7 +29,7 @@ struct _SscSequencer
 	SscSymbolVector vector;
 };
 
-SscSequencer *ssc_sequencer_init(SscSymbolDB *db)
+SscSequencer *ssc_sequencer_new(SscSymbolDB *db)
 {
 	SscSequencer *seqr;
 	

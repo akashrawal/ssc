@@ -210,7 +210,7 @@ type: base_type { $$.xtype = $1.xtype; }
 				YYABORT;
 			}
 			$$.xtype = $5.xtype;
-			$5.xtype.complexity = $3.xint;
+			$$.xtype.complexity = $3.xint;
 		}
 	| KW_SEQ base_type { 
 			$$.xtype = $2.xtype; 

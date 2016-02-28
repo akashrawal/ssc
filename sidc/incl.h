@@ -21,6 +21,10 @@
 //Dependencies
 #include <ssc/ssc.h>
 
+//Which main() function to use (for testing)
+#define SSC_TEST_NONE
+//#define SSC_TEST_BST
+
 //Include all headers
 #include "bst.h"
 #include "symbol.h"

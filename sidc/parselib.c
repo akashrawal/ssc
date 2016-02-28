@@ -84,7 +84,7 @@ static void ssc_parser_summarise_log(SscParser *parser)
 		
 		for (i = 0; i < SSC_LOG_N; i++)
 			fprintf(parser->log, "%s%d %s(s)", 
-				i ? ", " : "", i, log_msg[i]);
+				i ? ", " : "", parser->count[i], log_msg[i]);
 	}
 	
 	fprintf(parser->log, "\n");
@@ -173,7 +173,7 @@ SscSymbol *ssc_parser_lookup_expecting
 
 ///////////////////////////////
 //Integer related functions
-static unsigned int ssc_scan_digit(char ch)
+static unsigned int ssc_digitval(char ch)
 {
 	if (ch >= 'a' && ch <= 'f')
 		return ch - 'a' + 10;
@@ -202,6 +202,11 @@ MmcStatus ssc_parser_read_int
 			base = 16;
 			start = 2;
 		}
+		if (instr[0] == '0' && (instr[1] == 'b' || instr[1] == 'B'))
+		{
+			base = 2;
+			start = 2;
+		}
 	}
 	else if (len >= 1)
 	{
@@ -219,7 +224,7 @@ MmcStatus ssc_parser_read_int
 		if (instr[i] == '_')
 			continue;
 		
-		digit = ssc_scan_digit(instr[i]);
+		digit = ssc_digitval(instr[i]);
 		if (digit >= base)
 		{
 			ssc_parser_error(parser, "Unrecognized character %c", 
@@ -268,41 +273,45 @@ MmcStatus ssc_parser_read_string
 	int i;
 	MmcRBuf buf[1];
 #define ch (instr[i])
+#define inc \
+	i++; \
+	if (! ch) \
+	{ \
+		ssc_error("Assertion failure (instr = \'%s\')", instr); \
+		goto fail; \
+	}
 	
 	mmc_rbuf_init(buf);
 	
 	i = 1; 
 	while (ch != '\"')
-	{
-		if (! ch)
-			ssc_error("Assertion failure (instr = \'%s\')", instr);
-		
+	{	
 		if (ch == '\\')
 		{
-			i++;
+			inc;
 
 			//Substitution style escape sequences
 #define subst(ech, rpl) \
 			if (ch == ech) \
 			{ \
 				if (rpl) mmc_rbuf_append1(buf, rpl); \
-				i++; \
+				inc; \
 				continue; \
 			}
 	
-			subst('\n', 0)
-			subst('\\', '\\')
-			subst('?', '?')
-			subst('\'', '\'')
-			subst('\"', '\"')
-			subst('a', '\a')
-			subst('b', '\b')
-			subst('f', '\f')
-			subst('n', '\n')
-			subst('r', '\r')
-			subst('t', '\t')
-			subst('v', '\v')
-			
+			subst('\n', 0);
+			subst('\\', '\\');
+			subst('?', '?');
+			subst('\'', '\'');
+			subst('\"', '\"');
+			subst('a', '\a');
+			subst('b', '\b');
+			subst('f', '\f');
+			subst('n', '\n');
+			subst('r', '\r');
+			subst('t', '\t');
+			subst('v', '\v');
+
 #undef subst
 			
 			//Octal and hex
@@ -313,12 +322,12 @@ MmcStatus ssc_parser_read_string
 				{ \
 					unsigned int nval; \
 					int digit; \
-					digit = ssc_scan_digit(ch); \
+					digit = ssc_digitval(ch); \
 					if (digit >= base) break; \
 					nval = val * base + digit; \
 					if (nval > 255) break; \
 					val = nval; \
-					i++; \
+					inc; \
 				} \
 				if (lim_ctr == max_len) \
 				{ \
@@ -336,14 +345,14 @@ MmcStatus ssc_parser_read_string
 				continue; \
 			}
 				
-			if (ssc_scan_digit(ch) < 8)
+			if (ssc_digitval(ch) < 8)
 			{
-				accept_num(8, 3)
+				accept_num(8, 3);
 			}
 			
 			if (ch == 'x' || ch == 'X')
 			{
-				i++;
+				inc;
 				accept_num(16, 2);
 			}
 			
@@ -358,11 +367,11 @@ MmcStatus ssc_parser_read_string
 		
 		//For everything else
 		mmc_rbuf_append1(buf, ch);
-		i++;
+		inc;
 	}
 	
 	
-	
+#undef inc
 #undef ch
 
 	*res = ssc_parser_alloc_int(parser, buf->len + 1);
@@ -473,7 +482,8 @@ SscVar *ssc_parser_new_var
 {
 	SscVar *var;
 	
-	var = (SscVar *) mmc_alloc(sizeof(SscVar) + strlen(name) + 1);
+	var = (SscVar *) ssc_parser_alloc_final
+		(parser, sizeof(SscVar) + strlen(name) + 1);
 	var->type = type;
 	strcpy(var->name, name);
 	
@@ -619,6 +629,8 @@ static SscParser *ssc_parser_new
 
 static void ssc_parser_destroy(SscParser *parser)
 {
+	ssc_bst_unref(parser->index);
+	
 	ssc_allocator_unref(parser->int_alloc);
 	ssc_allocator_unref(parser->final_alloc);
 	
@@ -675,7 +687,7 @@ MmcStatus ssc_parser_parse_needed
 		{
 			//Initialize scanner 
 			ssc_yylex_init_extra(parser, &yyscanner);
-			ssc_yyset_in(yyscanner, input);
+			ssc_yyset_in(input, yyscanner);
 			
 			//Run parser
 			res = ssc_yyparse(yyscanner, parser);

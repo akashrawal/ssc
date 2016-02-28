@@ -85,14 +85,15 @@ void ssc_var_code_optional_test_exp
 //These have to be kept in sync with enum SscTypeFundamentalID
 const char *ssc_names[] =
 {
-	"uint8_t",
-	"uint16_t",
-	"uint32_t", 
-	"uint64_t",
+	NULL, 
 	"int8_t",
 	"int16_t",
 	"int32_t",
 	"int64_t",
+	"uint8_t",
+	"uint16_t",
+	"uint32_t", 
+	"uint64_t",
 	"SscValFlt",
 	"SscValFlt",
 	"char*",
