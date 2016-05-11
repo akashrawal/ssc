@@ -156,6 +156,21 @@ char *ssc_segment_read_string(SscSegment *seg)
 	return res;
 }
 
+void ssc_segment_write_msg(SscSegment *seg, MmcMsg *msg)
+{
+	*seg->submsgs = msg;
+	mmc_msg_ref(msg);
+	seg->submsgs++;
+}
+
+MmcMsg *ssc_segment_read_msg(SscSegment *seg)
+{
+	MmcMsg *res = *seg->submsgs;
+	mmc_msg_ref(res);
+	seg->submsgs++;
+	return res;
+}
+
 uint16_t ssc_get_fn_idx(MmcMsg *msg)
 {
 	uint16_t res;

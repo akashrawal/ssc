@@ -98,6 +98,8 @@ int ssc_msg_iter_get_segment
 	 SscSegment *res);
 
 /**Determines whether the iterator is at the end.*/
+//TODO: Rename this function
+//TODO: Replace macros with static inline functions
 #define ssc_msg_iter_is_empty(self) \
 	(((self)->bytes_lim - (self)->bytes) \
 	 + ((self)->submsgs_lim - (self)->submsgs) ? 0 : 1)
@@ -387,7 +389,7 @@ char *ssc_segment_read_string(SscSegment *seg);
  */
 void ssc_segment_write_msg(SscSegment *seg, MmcMsg *msg);
 
-/**Retrives a message off the segment and incremetns its position 
+/**Retrives a message off the segment and increments its position 
  * accordingly.
  * \param seg The segment.
  * \param msg A reference to the message. When done, drop reference

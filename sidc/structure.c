@@ -62,13 +62,13 @@ void ssc_struct_gen_declaration(SscSymbol *value, FILE *h_file)
 	//Serialization function
 	fprintf(h_file, 
 		"void %s__write\n"
-		"    (%s *value, SscSegment *seg, SscDStream *dstream);\n\n",
+		"    (%s *value, SscSegment *seg, SscMsgIter *msg_iter);\n\n",
 		value->name, value->name);
 	
 	//Deserialization function
 	fprintf(h_file, 
 		"int %s__read\n"
-		"    (%s *value, SscSegment *seg, SscDStream *dstream);\n\n",
+		"    (%s *value, SscSegment *seg, SscMsgIter *msg_iter);\n\n",
 		value->name, value->name);
 	
 	//Function to free the structure
@@ -123,7 +123,7 @@ void ssc_struct_gen_code
 	//Serialization function
 	fprintf(c_file, 
 		"void %s__write\n"
-		"    (%s *value, SscSegment *seg, SscDStream *dstream)\n"
+		"    (%s *value, SscSegment *seg, SscMsgIter *msg_iter)\n"
 		"{\n",
 		value->name, value->name);
 	
@@ -134,7 +134,7 @@ void ssc_struct_gen_code
 	//Deserialization function
 	fprintf(c_file, 
 		"int %s__read\n"
-		"    (%s *value, SscSegment *seg, SscDStream *dstream)\n"
+		"    (%s *value, SscSegment *seg, SscMsgIter *msg_iter)\n"
 		"{\n",
 		value->name, value->name);
 	
@@ -159,7 +159,7 @@ void ssc_struct_gen_code
 		"MmcMsg *%s__serialize(%s *value)\n"
 		"{\n"
 		"    SscSegment seg;\n"
-		"    SscDStream dstream;\n"
+		"    SscMsgIter msg_iter;\n"
 		"    SscDLen dlen = {%d, %d};\n"
 		"    MmcMsg *msg;\n"
 		"    \n",
@@ -180,12 +180,12 @@ void ssc_struct_gen_code
 		value->name);
 	}
 	fprintf(c_file, 
-		"    msg = mmc_msg_new(dlen.n_bytes, dlen.n_submsgs);\n"
+		"    msg = mmc_msg_newa(dlen.n_bytes, dlen.n_submsgs);\n"
 		"    \n"
-		"    mmc_msg_iter(msg, &dstream);\n"
-		"    ssc_dstream_get_segment(&dstream, %d, %d, &seg);\n"
+		"    ssc_msg_iter_init(&msg_iter, msg);\n"
+		"    ssc_msg_iter_get_segment(&msg_iter, %d, %d, &seg);\n"
 		"    \n"
-		"    %s__write(value, &seg, &dstream);\n"
+		"    %s__write(value, &seg, &msg_iter);\n"
 		"    \n"
 		"    return msg;\n"
 		"}\n\n",
@@ -198,16 +198,16 @@ void ssc_struct_gen_code
 		"int %s__deserialize(MmcMsg *msg, %s *value)\n"
 		"{\n"
 		"    SscSegment seg;\n"
-		"    SscDStream dstream;\n"
+		"    SscMsgIter msg_iter;\n"
 		"    \n"
-		"    mmc_msg_iter(msg, &dstream);\n"
-		"    if (ssc_dstream_get_segment(&dstream, %d, %d, &seg) < 0)\n"
+		"    ssc_msg_iter_init(&msg_iter, msg);\n"
+		"    if (ssc_msg_iter_get_segment(&msg_iter, %d, %d, &seg) < 0)\n"
 		"        goto _ssc_return;\n"
 		"    \n"
-		"    if (%s__read(value, &seg, &dstream) < 0)\n"
+		"    if (%s__read(value, &seg, &msg_iter) < 0)\n"
 		"        goto _ssc_return;\n"
 		"    \n"
-		"    if (! ssc_dstream_is_empty(&dstream))\n"
+		"    if (! ssc_msg_iter_is_empty(&msg_iter))\n"
 		"        goto _ssc_destroy_n_return;\n"
 		"    \n"
 		"    return 0;\n"

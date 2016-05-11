@@ -270,8 +270,8 @@ integer_val: VAL_NUM { $$.xint = $1.xint; }
 			
 			$$.xint = sym->v.xint;
 		}
-	| LPAREN integer_exp RPAREN
-	| MINUS integer_val
+	| LPAREN integer_exp RPAREN { $$.xint = $2.xint; }
+	| MINUS integer_val { $$.xint = - $2.xint; }
 	;
 
 //String expressions

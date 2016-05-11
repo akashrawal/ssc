@@ -74,7 +74,7 @@ int ssc_base_type_is_constsize(SscType type);
 SscDLen ssc_type_calc_base_size(SscType type);
 int ssc_type_is_constsize(SscType type);
 
-#define ssc_type_is_fundamental(typeptr) ((typeptr)->sym ? 1 : 0)
+#define ssc_type_is_fundamental(typeptr) ((typeptr)->sym ? 0 : 1)
 
 //Variable
 typedef struct

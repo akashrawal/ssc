@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	//Read arguments
 	if (argc != 2)
 	{
-		printf("Usage: %s filename.sid\n", argv[0]);
+		printf("Usage: %s filename\n", argv[0]);
 		exit(1);
 	}
 	
@@ -67,33 +67,67 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	
-	//Produce header file
+	//Produce output
 	{
-		FILE *stream;
+		FILE *h_stream, *c_stream;
 		SscSequencer *seqr;
 		SscSymbolArray symbols;
+		SscSymbol *iter;
+		SscFileData file_data;
 		int i; 
 		
+		//Deal with scanning, parsing, semantics, 
+		//and generate symbol tree
 		seqr = ssc_sequencer_new(db);
 		ssc_sequencer_process_file(seqr, infile);
 		symbols = ssc_sequencer_destroy(seqr);
+		file_data = ssc_symbol_db_get_file_data(db, infile);
 		
-		stream = fopen(h_file, "w");
-		if (! stream)
+		//Open output files
+		h_stream = fopen(h_file, "w");
+		if (! h_stream)
 		{
 			fprintf(stderr, "Cannot open %s: %s",
 				h_file, strerror(errno));
 			exit(1);
 		}
+		c_stream = fopen(c_file, "w");
+		if (! c_stream)
+		{
+			fprintf(stderr, "Cannot open %s: %s",
+				c_file, strerror(errno));
+			exit(1);
+		}
 		
+		//Write boilerplates
+		fprintf(c_stream, "#include <ssc/ssc.h>\n\n");
+		
+		//Generate declarations
 		for (i = 0; i < symbols.len; i++)
 		{
-			ssc_struct_gen_declaration(symbols.d[i], stream);
+			if (symbols.d[i]->type == SSC_SYMBOL_STRUCT)
+			{
+				ssc_struct_gen_declaration(symbols.d[i], h_stream);
+				ssc_struct_gen_declaration(symbols.d[i], c_stream);
+			}
+			if (symbols.d[i]->type == SSC_SYMBOL_STRING)
+				printf("String declared %s = \"%s\"\n", 
+					symbols.d[i]->name, symbols.d[i]->v.xstr);
+		}
+		
+		//Generate code
+		for (iter = file_data.list; iter; iter = iter->next)
+		{
+			if (iter->type == SSC_SYMBOL_STRUCT)
+				ssc_struct_gen_code(iter, c_stream);
 		}
 		
 		free(symbols.d);
-		fclose(stream);
+		fclose(h_stream);
+		fclose(c_stream);
 	}
+	
+	
 	
 	//Free file names
 	free(c_file);

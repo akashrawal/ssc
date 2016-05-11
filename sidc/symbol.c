@@ -141,10 +141,72 @@ char *ssc_type_fundamental_names[13] =
 		"msg"
 	};
 
+//TODO: delete this
+/*
+static void ssc_symbol_db_calc_var_list_size
+	(SscSymbolDB *db, SscVarList *listptr)
+{
+	int constsize = 1;
+	SscDLen size = {0, 0};
+	int i;
+	
+	for (i = 0; i < listptr->len; i++)
+	{
+		SscDLen unit_size;
+		int unit_constsize;
+		
+		unit_size = ssc_type_calc_base_size(listptr->a[i]->type);
+		unit_constsize = ssc_type_is_constsize(listptr->a[i]->type);
+		
+		size.n_bytes += unit_size.n_bytes; 
+		size.n_submsgs += unit_size.n_submsgs;
+		if (unit_constsize == 0)
+			constsize = 0;
+	}
+	
+	
+	//Now return our findings
+	listptr->base_size = size;
+	listptr->constsize = constsize;
+}
+* */
+
+static void ssc_calc_var_list_size
+	(SscVarList *listptr)
+{
+	int constsize = 1;
+	SscDLen size = {0, 0};
+	int i;
+	
+	for (i = 0; i < listptr->len; i++)
+	{
+		SscDLen unit_size;
+		int unit_constsize;
+		
+		unit_size = ssc_type_calc_base_size(listptr->a[i]->type);
+		unit_constsize = ssc_type_is_constsize(listptr->a[i]->type);
+		
+		size.n_bytes += unit_size.n_bytes; 
+		size.n_submsgs += unit_size.n_submsgs;
+		if (unit_constsize == 0)
+			constsize = 0;
+	}
+	
+	
+	//Now return our findings
+	listptr->base_size = size;
+	listptr->constsize = constsize;
+}
+
 SscDLen ssc_base_type_calc_base_size(SscType type)
 {
 	if (type.sym)
 	{
+		//varlist->constsize == -1 is used to signify 
+		//that size is not calculated yet.
+		if (type.sym->v.xstruct.fields.constsize == -1)
+			ssc_calc_var_list_size(&(type.sym->v.xstruct.fields));
+			
 		return type.sym->v.xstruct.fields.base_size;
 	}
 	else
@@ -157,7 +219,12 @@ int ssc_base_type_is_constsize(SscType type)
 {
 	if (type.sym)
 	{
+		if (type.sym->v.xstruct.fields.constsize == -1)
+			ssc_calc_var_list_size(&(type.sym->v.xstruct.fields));
+			
 		if (type.sym->v.xstruct.fields.constsize)
+			return 1;
+		else 
 			return 0;
 	}
 	
@@ -200,33 +267,6 @@ int ssc_type_is_constsize(SscType type)
 		return 0;
 	
 	return ssc_base_type_is_constsize(type);
-}
-
-static void ssc_symbol_db_calc_var_list_size
-	(SscSymbolDB *db, SscVarList *listptr)
-{
-	int constsize = 1;
-	SscDLen size = {0, 0};
-	int i;
-	
-	for (i = 0; i < listptr->len; i++)
-	{
-		SscDLen unit_size;
-		int unit_constsize;
-		
-		unit_size = ssc_type_calc_base_size(listptr->a[i]->type);
-		unit_constsize = ssc_type_is_constsize(listptr->a[i]->type);
-		
-		size.n_bytes += unit_size.n_bytes; 
-		size.n_submsgs += unit_size.n_submsgs;
-		if (unit_constsize == 0)
-			constsize = 0;
-	}
-	
-	
-	//Now return our findings
-	listptr->base_size = size;
-	listptr->constsize = constsize;
 }
 
 SscSymbolDB *ssc_symbol_db_new()
@@ -317,6 +357,24 @@ void ssc_symbol_db_register_file_parsed
 	file->data = data;
 	ssc_allocator_ref(data.allocator);
 	
+	//initialize varlist->constsize = -1
+	for (sym_iter = data.list; sym_iter; sym_iter = sym_iter->next)
+	{
+		if (sym_iter->type == SSC_SYMBOL_STRUCT)
+		{
+			sym_iter->v.xstruct.fields.constsize = -1;
+		}
+		else if (sym_iter->type == SSC_SYMBOL_INTERFACE)
+		{
+			int i;
+			for (i = 0; i < sym_iter->v.xiface.fns_len; i++)
+			{
+				sym_iter->v.xiface.fns[i]->in.constsize = -1;
+				sym_iter->v.xiface.fns[i]->out.constsize = -1;
+			}
+		}
+	}
+	
 	//Add all file symbols
 	for (sym_iter = data.list; sym_iter; sym_iter = sym_iter->next)
 	{
@@ -328,18 +386,18 @@ void ssc_symbol_db_register_file_parsed
 		//Calculate sizes as applicable
 		if (sym_iter->type == SSC_SYMBOL_STRUCT)
 		{
-			ssc_symbol_db_calc_var_list_size
-				(db, &(sym_iter->v.xstruct.fields));
+			ssc_calc_var_list_size
+				(&(sym_iter->v.xstruct.fields));
 		}
 		else if (sym_iter->type == SSC_SYMBOL_INTERFACE)
 		{
 			int i;
 			for (i = 0; i < sym_iter->v.xiface.fns_len; i++)
 			{
-				ssc_symbol_db_calc_var_list_size
-					(db, &(sym_iter->v.xiface.fns[i]->in));
-				ssc_symbol_db_calc_var_list_size
-					(db, &(sym_iter->v.xiface.fns[i]->out));
+				ssc_calc_var_list_size
+					(&(sym_iter->v.xiface.fns[i]->in));
+				ssc_calc_var_list_size
+					(&(sym_iter->v.xiface.fns[i]->out));
 			}
 		}
 	}

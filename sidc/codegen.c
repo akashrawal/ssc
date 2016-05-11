@@ -150,7 +150,7 @@ void ssc_var_code_for_base_write
 	{
 		fprintf(c_file, "%s__write(&(", var->type.sym->name);
 		ssc_var_code_base_exp(var, prefix, c_file);
-		fprintf(c_file, "), %s, dstream);\n", segment);
+		fprintf(c_file, "), %s, msg_iter);\n", segment);
 	}
 	else
 	{
@@ -221,7 +221,7 @@ int ssc_var_code_for_base_read
 		else if (var->type.fid == SSC_TYPE_FUNDAMENTAL_MSG)
 		{
 			ssc_var_code_base_exp(var, prefix, c_file);
-			fprintf(c_file, " = mmc_msg_read(%s, dstream);\n",
+			fprintf(c_file, " = ssc_segment_read_msg(%s);\n",
 			        segment);
 		}
 		else
@@ -238,7 +238,7 @@ int ssc_var_code_for_base_read
 	{
 		fprintf(c_file, "if (%s__read(&(", var->type.sym->name);
 		ssc_var_code_base_exp(var, prefix, c_file);
-		fprintf(c_file, "), %s, dstream) < 0)\n", segment);
+		fprintf(c_file, "), %s, msg_iter) < 0)\n", segment);
 		failable = 1;
 	}
 	
@@ -547,7 +547,7 @@ void ssc_var_code_for_write
 			"        SscSegment sub_seg;\n"
 			"        \n"
 			"        ssc_segment_write_uint32(seg, %s%s.len);\n"
-			"        ssc_dstream_get_segment(dstream, "
+			"        ssc_msg_iter_get_segment(msg_iter, "
 			"%d * %s%s.len, %d * %s%s.len, &sub_seg);\n"
 			"        for (_i = 0; _i < %s%s.len; _i++)\n"
 			"        {\n"
@@ -576,7 +576,7 @@ void ssc_var_code_for_write
 			"        SscSegment sub_seg;\n"
 			"        \n"
 			"        ssc_segment_write_uchar(seg, 1);\n"
-			"        ssc_dstream_get_segment(dstream, "
+			"        ssc_msg_iter_get_segment(msg_iter, "
 			"%d, %d, &sub_seg);\n"
 			"        ", 
 			(int) base_size.n_bytes, (int) base_size.n_submsgs);
@@ -656,7 +656,7 @@ void ssc_var_code_for_read
 			"        int _i;\n"
 			"        SscSegment sub_seg;\n"
 			"        ssc_segment_read_uint32(seg, %s%s.len);\n"
-			"        if (ssc_dstream_get_segment(dstream, "
+			"        if (ssc_msg_iter_get_segment(msg_iter, "
 			"%d * %s%s.len, %d * %s%s.len, &sub_seg) < 0)\n"
 			"            goto _ssc_fail_%s;\n"
 			"        if (! (%s%s.data = (", 
@@ -666,7 +666,7 @@ void ssc_var_code_for_read
 			var->name, 
 			prefix, var->name);
 		ssc_gen_base_type(var->type, c_file);
-		fprintf(c_file, " *) ssc_tryalloc(sizeof(");
+		fprintf(c_file, " *) mmc_tryalloc(sizeof(");
 		ssc_gen_base_type(var->type, c_file);
 		fprintf(c_file, ") * %s%s.len)))\n"
 			"            goto _ssc_fail_%s;\n"
@@ -714,7 +714,7 @@ void ssc_var_code_for_read
 			"        ssc_segment_read_uchar(seg, presence);\n"
 			"        if (presence)\n"
 			"        {\n"
-			"            if (ssc_dstream_get_segment(dstream, "
+			"            if (ssc_msg_iter_get_segment(msg_iter, "
 			"%d, %d, &sub_seg) < 0)\n"
 			"                goto _ssc_fail_%s;\n",
 			(int) base_size.n_bytes, 
@@ -726,7 +726,7 @@ void ssc_var_code_for_read
 			"            if (! (%s%s = (",
 				prefix, var->name);
 			ssc_gen_base_type(var->type, c_file);
-			fprintf(c_file, " *) ssc_tryalloc(sizeof(");
+			fprintf(c_file, " *) mmc_tryalloc(sizeof(");
 			ssc_gen_base_type(var->type, c_file);
 			fprintf(c_file, "))))\n"
 			"            goto _ssc_fail_%s;\n",

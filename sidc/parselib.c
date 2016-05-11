@@ -376,7 +376,7 @@ MmcStatus ssc_parser_read_string
 
 	*res = ssc_parser_alloc_int(parser, buf->len + 1);
 	memcpy(*res, buf->data, buf->len);
-	*res[buf->len] = '\0';
+	(*res)[buf->len] = '\0';
 	free(buf->data);
 	return MMC_SUCCESS;
 	
