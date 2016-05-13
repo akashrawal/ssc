@@ -110,9 +110,6 @@ int main(int argc, char *argv[])
 				ssc_struct_gen_declaration(symbols.d[i], h_stream);
 				ssc_struct_gen_declaration(symbols.d[i], c_stream);
 			}
-			if (symbols.d[i]->type == SSC_SYMBOL_STRING)
-				printf("String declared %s = \"%s\"\n", 
-					symbols.d[i]->name, symbols.d[i]->v.xstr);
 		}
 		
 		//Generate code
