@@ -24,7 +24,10 @@
 
 void ssc_msg_iter_init(SscMsgIter *self, MmcMsg *msg)
 {
-	
+	self->bytes = msg->mem;
+	self->bytes_lim = self->bytes + msg->mem_len;
+	self->submsgs = msg->submsgs;
+	self->submsgs_lim = self->submsgs + msg->submsgs_len;
 }
 
 int ssc_msg_iter_get_segment
@@ -140,7 +143,7 @@ char *ssc_segment_read_string(SscSegment *seg)
 	len = submsg->mem_len;
 	
 	//get string and verify
-	if (submsg->submsg_len > 0)
+	if (submsg->submsgs_len > 0)
 		return NULL;
 	check = (char *) submsg->mem;
 	for (i = 0; i < len; i++)	
