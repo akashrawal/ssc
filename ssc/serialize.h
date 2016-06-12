@@ -110,7 +110,7 @@ int ssc_msg_iter_get_segment
  * \param seg Pointer to the segment (type SscSegment *)
  * \param val Value to store (type: unsigned char)
  */
-#define ssc_segment_write_uchar(seg, val) \
+#define ssc_segment_write_uint8(seg, val) \
 do { \
 	*((seg)->bytes) = val; \
 	(seg)->bytes += 1; \
@@ -170,7 +170,7 @@ do {\
  * \param seg Pointer to the segment (type SscSegment *)
  * \param lval Variable of type unsigned char to store the result
  */
-#define ssc_segment_read_uchar(seg, lval) \
+#define ssc_segment_read_uint8(seg, lval) \
 do { \
 	lval = *((seg)->bytes); \
 	(seg)->bytes += 1; \
@@ -219,11 +219,11 @@ do {\
 } while(0)
 
 #ifdef SSC_INT_2_COMPLEMENT
-#define ssc_segment_write_char ssc_segment_write_uchar
+#define ssc_segment_write_int8 ssc_segment_write_uint8
 #define ssc_segment_write_int16 ssc_segment_write_uint16
 #define ssc_segment_write_int32 ssc_segment_write_uint32
 #define ssc_segment_write_int64 ssc_segment_write_uint64
-#define ssc_segment_read_char ssc_segment_read_uchar
+#define ssc_segment_read_int8 ssc_segment_read_uint8
 #define ssc_segment_read_int16 ssc_segment_read_uint16
 #define ssc_segment_read_int32 ssc_segment_read_uint32
 #define ssc_segment_read_int64 ssc_segment_read_uint64
@@ -235,8 +235,8 @@ do {\
  * \param seg Pointer to the segment (type SscSegment *)
  * \param lval Value to store (type char)
  */
-#define ssc_segment_write_char(seg, lval) \
-	ssc_segment_write_uchar(seg, ssc_char_to_2_complement(lval))
+#define ssc_segment_write_int8(seg, lval) \
+	ssc_segment_write_uint8(seg, ssc_int8_to_2_complement(lval))
 
 /**Assigns a 16-bit signed integer to current segment position
  * after converting to little endian and increments it accordingly.
@@ -283,10 +283,10 @@ do { \
  * \param seg Pointer to the segment (type SscSegment *)
  * \param lval Variable of type char to store the result
  */
-#define ssc_segment_read_char(seg, lval) \
+#define ssc_segment_read_int8(seg, lval) \
 do { \
-	ssc_segment_read_uchar(seg, lval); \
-	lval = ssc_char_to_2_complement(lval); \
+	ssc_segment_read_uint8(seg, lval); \
+	lval = ssc_int8_to_2_complement(lval); \
 } while(0)
 
 /**Retrives a 16-bit signed integer from current segment position

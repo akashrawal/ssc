@@ -85,9 +85,9 @@ static void ssc_parser_summarise_log(SscParser *parser)
 		for (i = 0; i < SSC_LOG_N; i++)
 			fprintf(parser->log, "%s%d %s(s)", 
 				i ? ", " : "", parser->count[i], log_msg[i]);
+		
+		fprintf(parser->log, "\n");
 	}
-	
-	fprintf(parser->log, "\n");
 }
 
 //Allocates intermediate semantic structures

@@ -24,6 +24,7 @@
  * 2. Signed integers will be represented in two's complement form.
  */
  
+//TODO: try converting macros to static inline functions
 
 #include <ssc/generated.h>
 
@@ -203,7 +204,7 @@ uint64_t ssc_uint64_from_le(uint64_t val);
  * \param val signed char to convert
  * \return two's complement form of val
  */
-unsigned char ssc_char_to_2_complement(char val)
+unsigned char ssc_int8_to_2_complement(char val)
 
 /**Converts a 16-bit signed integer to two's complement form
  * \param val int16_t to convert
@@ -227,7 +228,7 @@ uint64_t ssc_int64_to_2_complement(int64_t val);
  * \param val A two's complement representation of signed char
  * \return Native representation of val
  */
-char ssc_char_from_2_complement(unsigned char val);
+char ssc_int8_from_2_complement(unsigned char val);
 
 /**Converts a 16-bit integer in two's complement form to native form
  * \param val A two's complement representation of a 16-bit signed integer
@@ -249,11 +250,11 @@ int64_t ssc_int64_from_2_complement(uint64_t val);
 
 #else
 //no-op macros for 2's complement systems
-#define ssc_char_to_2_complement(val)    ((unsigned char) (val))
+#define ssc_int8_to_2_complement(val)    ((unsigned char) (val))
 #define ssc_int16_to_2_complement(val)   ((uint16_t)      (val))
 #define ssc_int32_to_2_complement(val)   ((uint32_t)      (val))
 #define ssc_int64_to_2_complement(val)   ((uint64_t)      (val))
-#define ssc_char_from_2_complement(val)  ((char)          (val))
+#define ssc_int8_from_2_complement(val)  ((char)          (val))
 #define ssc_int16_from_2_complement(val) ((int16_t)       (val))
 #define ssc_int32_from_2_complement(val) ((int32_t)       (val))
 #define ssc_int64_from_2_complement(val) ((int64_t)       (val))

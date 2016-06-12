@@ -109,7 +109,7 @@ uint64_t ssc_uint64_from_le(uint64_t val)
 
 #ifndef SSC_INT_2_COMPLEMENT
 //Converts a signed char to two's complement form
-unsigned char ssc_char_to_2_complement(char val)
+unsigned char ssc_int8_to_2_complement(char val)
 {
 	if (val < 0)
 	{
@@ -164,7 +164,7 @@ uint64_t ssc_int64_to_2_complement(int64_t val)
 }
 
 //Converts a signed char in two's complement form to native form
-char ssc_char_from_2_complement(unsigned char val)
+char ssc_int8_from_2_complement(unsigned char val)
 {
 	//Check for negative value
 	if (val & (1 << 7))
