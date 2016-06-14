@@ -575,7 +575,7 @@ void ssc_var_code_for_write
 			"    {\n"
 			"        SscSegment sub_seg;\n"
 			"        \n"
-			"        ssc_segment_write_uchar(seg, 1);\n"
+			"        ssc_segment_write_uint8(seg, 1);\n"
 			"        ssc_msg_iter_get_segment(msg_iter, "
 			"%d, %d, &sub_seg);\n"
 			"        ", 
@@ -585,7 +585,7 @@ void ssc_var_code_for_write
 			"    }\n"
 			"    else\n"
 			"    {\n"
-			"        ssc_segment_write_uchar(seg, 0);\n"
+			"        ssc_segment_write_uint8(seg, 0);\n"
 			"    }\n");
 	}
 	fprintf(c_file, "\n");
@@ -711,7 +711,7 @@ void ssc_var_code_for_read
 			"    {\n"
 			"        SscSegment sub_seg;\n"
 			"        char presence;\n"
-			"        ssc_segment_read_uchar(seg, presence);\n"
+			"        ssc_segment_read_uint8(seg, presence);\n"
 			"        if (presence)\n"
 			"        {\n"
 			"            if (ssc_msg_iter_get_segment(msg_iter, "
