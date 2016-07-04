@@ -658,47 +658,57 @@ void ssc_var_code_for_read
 			"        ssc_segment_read_uint32(seg, %s%s.len);\n"
 			"        if (ssc_msg_iter_get_segment(msg_iter, "
 			"%d * %s%s.len, %d * %s%s.len, &sub_seg) < 0)\n"
-			"            goto _ssc_fail_%s;\n"
-			"        if (! (%s%s.data = (", 
+			"            goto _ssc_fail_%s;\n",
 			prefix, var->name, 
 			(int) base_size.n_bytes, prefix, var->name,
 			(int) base_size.n_submsgs, prefix, var->name,
-			var->name, 
+			var->name);
+		
+		fprintf(c_file, 
+			"        if (%s%s.len > 0)\n"
+			"        {\n",
+				prefix, var->name);
+		fprintf(c_file,
+			"            if (! (%s%s.data = (", 
 			prefix, var->name);
 		ssc_gen_base_type(var->type, c_file);
 		fprintf(c_file, " *) mmc_tryalloc(sizeof(");
 		ssc_gen_base_type(var->type, c_file);
 		fprintf(c_file, ") * %s%s.len)))\n"
-			"            goto _ssc_fail_%s;\n"
-			"        for (_i = 0; _i < %s%s.len; _i++)\n"
-			"        {\n"
-			"            ",
+			"                goto _ssc_fail_%s;\n"
+			"            for (_i = 0; _i < %s%s.len; _i++)\n"
+			"            {\n"
+			"                ",
 			prefix, var->name, 
 			var->name, 
 			prefix, var->name);
 		if (ssc_var_code_for_base_read(var, prefix, "&sub_seg", c_file))
 		{
 			fprintf(c_file, 
-			"            {\n");
+			"                {\n");
 			if (ssc_base_type_requires_free(var->type))
 			{
 				fprintf(c_file, 
-			"                for (_i--; _i >= 0; _i--)\n"
-			"                {\n"
-			"                    ");
+			"                    for (_i--; _i >= 0; _i--)\n"
+			"                    {\n"
+			"                        ");
 				ssc_var_code_for_base_free(var, prefix, c_file);
 				fprintf(c_file, 
-			"                }\n");
+			"                    }\n");
 			}
 			fprintf(c_file,
-			"                free(%s%s.data);\n"
-			"                goto _ssc_fail_%s;\n"
-			"            }\n", prefix, var->name, 
+			"                    free(%s%s.data);\n"
+			"                    goto _ssc_fail_%s;\n"
+			"                }\n", prefix, var->name, 
 				var->name);
 		}
 		fprintf(c_file,
+			"            }\n"
 			"        }\n"
-			"    }\n");
+			"        else\n"
+			"            %s%s.data = NULL;\n"
+			"    }\n",
+			prefix, var->name);
 		
 	}
 	//optional
