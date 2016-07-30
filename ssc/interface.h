@@ -21,6 +21,9 @@
  
 //Messages with a prefixed integer
 int ssc_read_prefix(MmcMsg *msg);
+MmcMsg *ssc_create_prefixed_empty_msg(uint8_t prefix);
+//TODO: decide whether use this macro in above functions. 
+#define SSC_PREFIX_SIZE 1
 
 //Type for servant-side stubs
 typedef MmcStatus (* SscReadMsgFn) (MmcMsg *msg, void *args);
