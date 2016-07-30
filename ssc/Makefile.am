@@ -11,11 +11,13 @@ BUILT_SOURCES = generated.h
 #libssc.la
 ssc_c =  \
 	types.c \
-	serialize.c
+	serialize.c \
+	interface.c
 
 ssc_h =  ssc.h incl.h \
 	types.h \
-	serialize.h
+	serialize.h \
+	interface.h
 	
      
 libssc_la_SOURCES = $(ssc_c) $(ssc_h)       

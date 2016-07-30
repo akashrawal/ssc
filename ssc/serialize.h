@@ -98,11 +98,12 @@ int ssc_msg_iter_get_segment
 	 SscSegment *res);
 
 /**Determines whether the iterator is at the end.*/
-//TODO: Rename this function
 //TODO: Replace macros with static inline functions
-#define ssc_msg_iter_is_empty(self) \
-	(((self)->bytes_lim - (self)->bytes) \
-	 + ((self)->submsgs_lim - (self)->submsgs) ? 0 : 1)
+static inline int ssc_msg_iter_at_end(SscMsgIter *self)
+{
+	return (((self)->bytes_lim - (self)->bytes) 
+	 + ((self)->submsgs_lim - (self)->submsgs) ? 0 : 1);
+}
 
 //writing unsigned integers
 /**Stores a 1-byte unsigned char to the current segment position

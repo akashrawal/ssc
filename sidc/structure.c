@@ -207,7 +207,7 @@ void ssc_struct_gen_code
 		"    if (%s__read(value, &seg, &msg_iter) < 0)\n"
 		"        goto _ssc_return;\n"
 		"    \n"
-		"    if (! ssc_msg_iter_is_empty(&msg_iter))\n"
+		"    if (! ssc_msg_iter_at_end(&msg_iter))\n"
 		"        goto _ssc_destroy_n_return;\n"
 		"    \n"
 		"    return 0;\n"
