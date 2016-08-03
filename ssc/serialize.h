@@ -86,6 +86,9 @@ typedef struct
  */
 void ssc_msg_iter_init(SscMsgIter *self, MmcMsg *msg);
 
+//TODO: Hunt for all functions who have success/failure return 
+//      type and replace return type with MmcStatus.
+//      Following is one of them.
 /**Gets a segment from a iterator, advancing its position forward. 
  * \param self The iterator
  * \param n_bytes The number of bytes to 'read' from the byte stream

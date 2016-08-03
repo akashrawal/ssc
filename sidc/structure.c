@@ -83,7 +83,7 @@ void ssc_struct_gen_declaration(SscSymbol *value, FILE *h_file)
 		
 	//Function to deserialize a message to get back structure
 	fprintf(h_file, 
-		"int %s__deserialize(MmcMsg *msg, %s *value);\n\n",
+		"MmcStatus %s__deserialize(MmcMsg *msg, %s *value);\n\n",
 		value->name, value->name);
 	
 	//Prevent multiple declarations: end
@@ -133,7 +133,7 @@ void ssc_struct_gen_code
 	
 	//Deserialization function
 	fprintf(c_file, 
-		"int %s__read\n"
+		"MmcStatus %s__read\n"
 		"    (%s *value, SscSegment *seg, SscMsgIter *msg_iter)\n"
 		"{\n",
 		value->name, value->name);
@@ -210,12 +210,12 @@ void ssc_struct_gen_code
 		"    if (! ssc_msg_iter_at_end(&msg_iter))\n"
 		"        goto _ssc_destroy_n_return;\n"
 		"    \n"
-		"    return 0;\n"
+		"    return MMC_SUCCESS;\n"
 		"    \n"
 		"_ssc_destroy_n_return:\n"
 		"    %s__free(value);\n"
 		"_ssc_return:\n"
-		"    return -1;\n"
+		"    return MMC_FAILURE;\n"
 		"}\n\n",
 		value->name, value->name,
 		(int) fields.base_size.n_bytes, 

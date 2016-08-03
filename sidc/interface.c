@@ -80,7 +80,7 @@ static void ssc_arglist_gen_declaration
 		
 	//Function to deserialize a message to get back structure
 	fprintf(h_file, 
-		"int %s%s(MmcMsg *msg, %s%s *value);\n\n",
+		"MmcStatus %s%s(MmcMsg *msg, %s%s *value);\n\n",
 		name_prefix, args_type.df, name_prefix, args_type.sn);
 }
 
@@ -143,7 +143,7 @@ static void ssc_arglist_gen_code
 	
 	//Function to deserialize a message to get back structure
 	fprintf(c_file, 
-		"int %s%s(MmcMsg *msg, %s%s *value)\n"
+		"MmcStatus %s%s(MmcMsg *msg, %s%s *value)\n"
 		"{\n"
 		"    SscSegment seg[1];\n"
 		"    SscMsgIter msg_iter[1];\n"
@@ -169,7 +169,7 @@ static void ssc_arglist_gen_code
 		"    if (! ssc_msg_iter_at_end(msg_iter))\n"
 		"        goto _ssc_destroy_n_return;\n"
 		"    \n"
-		"    return 0;\n"
+		"    return MMC_SUCCESS;\n"
 		"    \n"
 		"_ssc_destroy_n_return:\n");
 	
@@ -177,7 +177,7 @@ static void ssc_arglist_gen_code
 	
 	fprintf(c_file, 
 		"_ssc_return:\n"
-		"    return -1;\n"
+		"    return MMC_FAILURE;\n"
 		"}\n\n");
 }
 
