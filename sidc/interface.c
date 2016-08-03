@@ -105,8 +105,8 @@ static void ssc_arglist_gen_code
 	fprintf(c_file, 
 		"MmcMsg *%s%s(%s%s *value)\n"
 		"{\n"
-		"    SscSegment seg;\n"
-		"    SscMsgIter msg_iter;\n"
+		"    SscSegment seg[1];\n"
+		"    SscMsgIter msg_iter[1];\n"
 		"    SscDLen size = {%d + SSC_PREFIX_SIZE, %d};\n"
 		"    MmcMsg *msg;\n"
 		"    \n",
@@ -127,10 +127,10 @@ static void ssc_arglist_gen_code
 	fprintf(c_file, 
 		"    msg = mmc_msg_newa(size.n_bytes, size.n_submsgs);\n"
 		"    \n"
-		"    ssc_msg_iter_init(&msg_iter, msg);\n"
-		"    ssc_msg_iter_get_segment(&msg_iter, %d + SSC_PREFIX_SIZE, %d, &seg);\n"
+		"    ssc_msg_iter_init(msg_iter, msg);\n"
+		"    ssc_msg_iter_get_segment(msg_iter, %d + SSC_PREFIX_SIZE, %d, seg);\n"
 		"    \n"
-		"    ssc_segment_write_uint8(&seg, %d); //name_prefix\n"
+		"    ssc_segment_write_uint8(seg, %d); //name_prefix\n"
 		"    \n",
 			(int) args.base_size.n_bytes, 
 			(int) args.base_size.n_submsgs,
@@ -145,17 +145,17 @@ static void ssc_arglist_gen_code
 	fprintf(c_file, 
 		"int %s%s(MmcMsg *msg, %s%s *value)\n"
 		"{\n"
-		"    SscSegment seg;\n"
-		"    SscMsgIter msg_iter;\n"
+		"    SscSegment seg[1];\n"
+		"    SscMsgIter msg_iter[1];\n"
 		"    uint8_t prefix_val;\n"
 		"    \n"
-		"    ssc_msg_iter_init(&msg_iter, msg);\n"
-		"    if (ssc_msg_iter_get_segment(&msg_iter, SSC_PREFIX_SIZE, 0, &seg) < 0)\n"
+		"    ssc_msg_iter_init(msg_iter, msg);\n"
+		"    if (ssc_msg_iter_get_segment(msg_iter, SSC_PREFIX_SIZE, 0, seg) < 0)\n"
 		"        goto _ssc_return;\n"
-		"    ssc_segment_read_uint8(&seg, prefix_val);\n"
+		"    ssc_segment_read_uint8(seg, prefix_val);\n"
 		"    if (prefix_val != %d)\n"
 		"        goto _ssc_return;\n"
-		"    if (ssc_msg_iter_get_segment(&msg_iter, %d, %d, &seg) < 0)\n"
+		"    if (ssc_msg_iter_get_segment(msg_iter, %d, %d, seg) < 0)\n"
 		"        goto _ssc_return;\n"
 		"    \n",
 		name_prefix, args_type.df, name_prefix, args_type.sn,
@@ -166,7 +166,7 @@ static void ssc_arglist_gen_code
 	ssc_var_list_code_for_read(args, "value->", c_file);
 	
 	fprintf(c_file,
-		"    if (! ssc_msg_iter_at_end(&msg_iter))\n"
+		"    if (! ssc_msg_iter_at_end(msg_iter))\n"
 		"        goto _ssc_destroy_n_return;\n"
 		"    \n"
 		"    return 0;\n"
@@ -287,7 +287,7 @@ void ssc_iface_gen_declaration(SscSymbol *value, FILE *h_file)
 	
 	//Write skeleton declaration
 	fprintf(h_file, 
-		"extern SscSkeleton %s[1];\n"
+		"extern SscSkel %s[1];\n"
 		"\n",
 		value->name);
 	
@@ -313,6 +313,11 @@ void ssc_iface_gen_declaration(SscSymbol *value, FILE *h_file)
 			(iface->fns[i]->in, fl->data[i], args_in, h_file);
 		ssc_arglist_gen_declaration
 			(iface->fns[i]->out, fl->data[i], args_out, h_file);
+			
+		//Structure containing stubs
+		fprintf(h_file, 
+		"extern MmcStub %s__stub[1];\n\n",
+			fl->data[i]);
 	}
 	
 	//Prevent multiple declarations: end
@@ -352,9 +357,9 @@ void ssc_iface_gen_code
 		fprintf(c_file, 
 		"    {\n"
 		"        sizeof(%s__in_args),\n"
-		"        %s__read_msg,\n"
-		"        %s__create_reply,\n"
-		"        %s__in_args_free\n"
+		"        (SscReadMsgFn) %s__read_msg,\n"
+		"        (SscCreateReplyFn) %s__create_reply,\n"
+		"        (SscArgsFreeFn) %s__in_args_free\n"
 		"    }\n",
 			fl->data[i],
 			fl->data[i],
@@ -365,7 +370,7 @@ void ssc_iface_gen_code
 		"};\n"
 		"SscSkel %s[1] = {{\n"
 		"    %d,\n"
-		"    ssc_stub_array__%s\n"
+		"    ssc_sstub_array__%s\n"
 		"}};\n\n",
 		value->name,
 		fl_len, 
@@ -384,12 +389,22 @@ void ssc_iface_gen_code
 	
 		//Write code for functions
 		ssc_arglist_gen_code
-			(iface->fns[i]->in, fl->data[i], args_in, base + i, c_file);
+			(iface->fns[i]->in, fl->data[base + i], args_in, base + i, c_file);
 		ssc_arglist_gen_code
-			(iface->fns[i]->out, fl->data[i], args_out, 0, c_file);
+			(iface->fns[i]->out, fl->data[base + i], args_out, 0, c_file);
+			
+		//Package stubs into a structure
+		//TODO: Try a compile time solution instead of
+		//generating a structure
+		fprintf(c_file, 
+		"MmcStub %s__stub[1] = {{\n"
+		"    (MmcStubCreateMsg) %s__create_msg,\n"
+		"    (MmcStubReadReply) %s__read_reply\n"
+		"}};\n\n",
+			fl->data[base + i], 
+			fl->data[base + i], 
+			fl->data[base + i]);
 	}
-	
-	
 	
 	//Garbage collection
 	ssc_fn_list_destroy(fl);
