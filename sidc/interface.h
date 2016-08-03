@@ -1,5 +1,5 @@
-/* incl.h
- * Headers
+/* interface.h
+ * Dealing with interfaces
  * 
  * Copyright 2015 Akash Rawal
  * This file is part of Modular Middleware.
@@ -18,18 +18,10 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//Dependencies
-#include <ssc/ssc.h>
+//Writes header code for given interface
+void ssc_iface_gen_declaration(SscSymbol *value, FILE *h_file);
 
-//Which main() function to use (for testing)
-#define SSC_TEST_NONE
-//#define SSC_TEST_BST
+//Writes C code for given structure
+void ssc_iface_gen_code
+	(SscSymbol *value, FILE *c_file);
 
-//Include all headers
-#include "bst.h"
-#include "symbol.h"
-#include "parselib.h"
-#include "codegen.h"
-#include "structure.h"
-#include "interface.h"
-#include "sequencer.h"

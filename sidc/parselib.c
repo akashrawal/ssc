@@ -519,7 +519,10 @@ SscFn *ssc_parser_new_fn(SscParser *parser,
 {
 	SscFn *fn;
 	
-	fn = (SscFn *) ssc_parser_alloc_final(parser, sizeof(SscFn));
+	fn = (SscFn *) ssc_parser_alloc_final
+		(parser, sizeof(SscFn) + strlen(name) + 1);
+		
+	strcpy(fn->name, name);
 	
 	if (ssc_parser_rlist_to_array_checked
 			(parser, args, offsetof(SscVar, name), 

@@ -26,7 +26,7 @@ int ssc_read_prefix(MmcMsg *msg)
 	int res = -1;
 	
 	if (msg->mem_len >= 1)
-		res = *((uint8 *) msg->mem);
+		res = *((uint8_t *) msg->mem);
 		
 	return res;
 }
@@ -36,7 +36,7 @@ MmcMsg *ssc_create_prefixed_empty_msg(uint8_t prefix)
 	MmcMsg *msg;
 	
 	msg = mmc_msg_newa(1, 0);
-	*((uint8 *) msg->mem) = prefix;
+	*((uint8_t *) msg->mem) = prefix;
 	
 	return msg;
 }
@@ -56,7 +56,7 @@ static void ssc_servant_handle_msg
 	id = ssc_read_prefix(msg);
 	if (id < 0 || id >= servant->skel->n_fns)
 		goto fail;
-	sstub = servant->skel->sstubs[id]
+	sstub = servant->skel->sstubs + id;
 	
 	//Assertion (should be removed later)
 	if (sstub->args_size)
@@ -67,9 +67,9 @@ static void ssc_servant_handle_msg
 	}
 	else
 	{
-		if (sstub->read_msg || sstub->free)
+		if (sstub->read_msg || sstub->in_args_free)
 			ssc_error("Assertion failure "
-				"(sstub->read_msg || sstub->free)");
+				"(sstub->read_msg || sstub->in_args_free)");
 	}
 	
 	//Deserialize the arguments
@@ -86,9 +86,9 @@ static void ssc_servant_handle_msg
 	(* servant->impl[id])(servant, ctx, args);
 	
 	//Free arguments
-	if (sstub->free_args)
-		(* servant->free_args) (args);
-	if (sstub->args_size)
+	if (sstub->in_args_free)
+		(* sstub->in_args_free) (args);
+	if (args)
 		free(args);
 	
 	return;
@@ -97,6 +97,11 @@ static void ssc_servant_handle_msg
 fail:
 	//Send error message back
 	reply_msg = ssc_create_prefixed_empty_msg(1);
+	mmc_mp_context_reply(ctx, reply_msg);
+	mmc_msg_unref(reply_msg);
+	
+	if (args)
+		free(args);
 }
 
 static void ssc_servant_destroy(MmcServant *p)
@@ -110,7 +115,7 @@ SscServant *ssc_servant_new(const SscSkel *skel)
 	int i;
 	
 	servant = (SscServant *) mmc_servant_create
-		(sizeof(SscServant) + (sizeof(SscImplFn) * skel->n_fns,
+		(sizeof(SscServant) + (sizeof(SscImplFn) * skel->n_fns),
 		ssc_servant_handle_msg,
 		ssc_servant_destroy);
 	

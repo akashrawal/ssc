@@ -11,6 +11,7 @@ sidc_SOURCES = incl.h \
 	codegen.c     codegen.h \
 	structure.c   structure.h \
 	sequencer.c   sequencer.h \
+	interface.c   interface.h \
 	main.c
 	
 

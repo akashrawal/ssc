@@ -110,6 +110,11 @@ int main(int argc, char *argv[])
 				ssc_struct_gen_declaration(symbols.d[i], h_stream);
 				ssc_struct_gen_declaration(symbols.d[i], c_stream);
 			}
+			else if (symbols.d[i]->type == SSC_SYMBOL_INTERFACE)		
+			{
+				ssc_iface_gen_declaration(symbols.d[i], h_stream);
+				ssc_iface_gen_declaration(symbols.d[i], c_stream);
+			}
 		}
 		
 		//Generate code
@@ -117,6 +122,8 @@ int main(int argc, char *argv[])
 		{
 			if (iter->type == SSC_SYMBOL_STRUCT)
 				ssc_struct_gen_code(iter, c_stream);
+			else if (iter->type == SSC_SYMBOL_INTERFACE)
+				ssc_iface_gen_code(iter, c_stream);
 		}
 		
 		free(symbols.d);

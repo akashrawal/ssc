@@ -141,7 +141,7 @@ void ssc_struct_gen_code
 	ssc_var_list_code_for_read
 		(fields, "value->", c_file);
 	fprintf(c_file, "\n    return 0;\n\n");
-	ssc_var_list_code_for_read_fail(fields, "value->", c_file);
+	ssc_var_list_code_for_read_fail(fields, "value->", 0, c_file);
 	fprintf(c_file, "\n    return -1;\n}\n\n");
 	
 	//Function to free the structure

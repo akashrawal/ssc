@@ -39,7 +39,7 @@ void ssc_var_list_code_for_read
 //Writes code to deserialize a given list of variables: 
 //error handling part
 void ssc_var_list_code_for_read_fail
-	(SscVarList list, const char *prefix, FILE *c_file);
+	(SscVarList list, const char *prefix, int with_free, FILE *c_file);
 
 //Writes code to free a given list of variables
 void ssc_var_list_code_for_free
