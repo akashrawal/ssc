@@ -52,8 +52,8 @@
  */
 #define ssc_uint16_copy_to_le(le_ptr, h_ptr) \
 do { \
-	((char *) (le_ptr))[SSC_UINT16_BYTE_0_SIGNIFICANCE] = ((char *) (h_ptr))[0]; \
-	((char *) (le_ptr))[SSC_UINT16_BYTE_1_SIGNIFICANCE] = ((char *) (h_ptr))[1]; \
+    ((char *) (le_ptr))[SSC_UINT16_BYTE_0_SIGNIFICANCE] = ((char *) (h_ptr))[0]; \
+    ((char *) (le_ptr))[SSC_UINT16_BYTE_1_SIGNIFICANCE] = ((char *) (h_ptr))[1]; \
 } while (0)
 
 /**Copies a 16-bit wide unsigned integer from le_ptr, converts it to
@@ -63,8 +63,8 @@ do { \
  */
 #define ssc_uint16_copy_from_le(le_ptr, h_ptr) \
 do { \
-	((char *) (h_ptr))[0] = ((char *) (le_ptr))[SSC_UINT16_BYTE_0_SIGNIFICANCE]; \
-	((char *) (h_ptr))[1] = ((char *) (le_ptr))[SSC_UINT16_BYTE_1_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[0] = ((char *) (le_ptr))[SSC_UINT16_BYTE_0_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[1] = ((char *) (le_ptr))[SSC_UINT16_BYTE_1_SIGNIFICANCE]; \
 } while (0)
 
 /**Copies a 32-bit wide unsigned integer from h_ptr, converts it to
@@ -74,10 +74,10 @@ do { \
  */
 #define ssc_uint32_copy_to_le(le_ptr, h_ptr) \
 do { \
-	((char *) (le_ptr))[SSC_UINT32_BYTE_0_SIGNIFICANCE] = ((char *) (h_ptr))[0]; \
-	((char *) (le_ptr))[SSC_UINT32_BYTE_1_SIGNIFICANCE] = ((char *) (h_ptr))[1]; \
-	((char *) (le_ptr))[SSC_UINT32_BYTE_2_SIGNIFICANCE] = ((char *) (h_ptr))[2]; \
-	((char *) (le_ptr))[SSC_UINT32_BYTE_3_SIGNIFICANCE] = ((char *) (h_ptr))[3]; \
+    ((char *) (le_ptr))[SSC_UINT32_BYTE_0_SIGNIFICANCE] = ((char *) (h_ptr))[0]; \
+    ((char *) (le_ptr))[SSC_UINT32_BYTE_1_SIGNIFICANCE] = ((char *) (h_ptr))[1]; \
+    ((char *) (le_ptr))[SSC_UINT32_BYTE_2_SIGNIFICANCE] = ((char *) (h_ptr))[2]; \
+    ((char *) (le_ptr))[SSC_UINT32_BYTE_3_SIGNIFICANCE] = ((char *) (h_ptr))[3]; \
 } while (0)
 
 /**Copies a 32-bit wide unsigned integer from le_ptr, converts it to
@@ -87,10 +87,10 @@ do { \
  */
 #define ssc_uint32_copy_from_le(le_ptr, h_ptr) \
 do { \
-	((char *) (h_ptr))[0] = ((char *) (le_ptr))[SSC_UINT32_BYTE_0_SIGNIFICANCE]; \
-	((char *) (h_ptr))[1] = ((char *) (le_ptr))[SSC_UINT32_BYTE_1_SIGNIFICANCE]; \
-	((char *) (h_ptr))[2] = ((char *) (le_ptr))[SSC_UINT32_BYTE_2_SIGNIFICANCE]; \
-	((char *) (h_ptr))[3] = ((char *) (le_ptr))[SSC_UINT32_BYTE_3_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[0] = ((char *) (le_ptr))[SSC_UINT32_BYTE_0_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[1] = ((char *) (le_ptr))[SSC_UINT32_BYTE_1_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[2] = ((char *) (le_ptr))[SSC_UINT32_BYTE_2_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[3] = ((char *) (le_ptr))[SSC_UINT32_BYTE_3_SIGNIFICANCE]; \
 } while (0)
 
 /**Copies a 64-bit wide unsigned integer from h_ptr, converts it to
@@ -100,14 +100,14 @@ do { \
  */
 #define ssc_uint64_copy_to_le(le_ptr, h_ptr) \
 do { \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_0_SIGNIFICANCE] = ((char *) (h_ptr))[0]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_1_SIGNIFICANCE] = ((char *) (h_ptr))[1]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_2_SIGNIFICANCE] = ((char *) (h_ptr))[2]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_3_SIGNIFICANCE] = ((char *) (h_ptr))[3]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_4_SIGNIFICANCE] = ((char *) (h_ptr))[4]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_5_SIGNIFICANCE] = ((char *) (h_ptr))[5]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_6_SIGNIFICANCE] = ((char *) (h_ptr))[6]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_7_SIGNIFICANCE] = ((char *) (h_ptr))[7]; \
+    ((char *) (le_ptr))[SSC_UINT64_BYTE_0_SIGNIFICANCE] = ((char *) (h_ptr))[0]; \
+    ((char *) (le_ptr))[SSC_UINT64_BYTE_1_SIGNIFICANCE] = ((char *) (h_ptr))[1]; \
+    ((char *) (le_ptr))[SSC_UINT64_BYTE_2_SIGNIFICANCE] = ((char *) (h_ptr))[2]; \
+    ((char *) (le_ptr))[SSC_UINT64_BYTE_3_SIGNIFICANCE] = ((char *) (h_ptr))[3]; \
+    ((char *) (le_ptr))[SSC_UINT64_BYTE_4_SIGNIFICANCE] = ((char *) (h_ptr))[4]; \
+    ((char *) (le_ptr))[SSC_UINT64_BYTE_5_SIGNIFICANCE] = ((char *) (h_ptr))[5]; \
+    ((char *) (le_ptr))[SSC_UINT64_BYTE_6_SIGNIFICANCE] = ((char *) (h_ptr))[6]; \
+    ((char *) (le_ptr))[SSC_UINT64_BYTE_7_SIGNIFICANCE] = ((char *) (h_ptr))[7]; \
 } while (0)
 
 /**Copies a 64-bit wide unsigned integer from le_ptr, converts it to
@@ -117,14 +117,14 @@ do { \
  */
 #define ssc_uint64_copy_from_le(le_ptr, h_ptr) \
 do { \
-	((char *) (h_ptr))[0] = ((char *) (le_ptr))[SSC_UINT64_BYTE_0_SIGNIFICANCE]; \
-	((char *) (h_ptr))[1] = ((char *) (le_ptr))[SSC_UINT64_BYTE_1_SIGNIFICANCE]; \
-	((char *) (h_ptr))[2] = ((char *) (le_ptr))[SSC_UINT64_BYTE_2_SIGNIFICANCE]; \
-	((char *) (h_ptr))[3] = ((char *) (le_ptr))[SSC_UINT64_BYTE_3_SIGNIFICANCE]; \
-	((char *) (h_ptr))[4] = ((char *) (le_ptr))[SSC_UINT64_BYTE_4_SIGNIFICANCE]; \
-	((char *) (h_ptr))[5] = ((char *) (le_ptr))[SSC_UINT64_BYTE_5_SIGNIFICANCE]; \
-	((char *) (h_ptr))[6] = ((char *) (le_ptr))[SSC_UINT64_BYTE_6_SIGNIFICANCE]; \
-	((char *) (h_ptr))[7] = ((char *) (le_ptr))[SSC_UINT64_BYTE_7_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[0] = ((char *) (le_ptr))[SSC_UINT64_BYTE_0_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[1] = ((char *) (le_ptr))[SSC_UINT64_BYTE_1_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[2] = ((char *) (le_ptr))[SSC_UINT64_BYTE_2_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[3] = ((char *) (le_ptr))[SSC_UINT64_BYTE_3_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[4] = ((char *) (le_ptr))[SSC_UINT64_BYTE_4_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[5] = ((char *) (le_ptr))[SSC_UINT64_BYTE_5_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[6] = ((char *) (le_ptr))[SSC_UINT64_BYTE_6_SIGNIFICANCE]; \
+    ((char *) (h_ptr))[7] = ((char *) (le_ptr))[SSC_UINT64_BYTE_7_SIGNIFICANCE]; \
 } while (0)
 
 //16-bit
@@ -288,16 +288,16 @@ int64_t ssc_int64_from_2_complement(uint64_t val);
  */
 typedef enum
 {
-	///An ordinary nonzero floating point number
-	SSC_FLT_NORMAL,
-	///Positive infinity
-	SSC_FLT_INFINITE,
-	///Negative infinity
-	SSC_FLT_NEG_INFINITE,
-	///Zero
-	SSC_FLT_ZERO,
-	///Not a number (NaN)
-	SSC_FLT_NAN
+    ///An ordinary nonzero floating point number
+    SSC_FLT_NORMAL,
+    ///Positive infinity
+    SSC_FLT_INFINITE,
+    ///Negative infinity
+    SSC_FLT_NEG_INFINITE,
+    ///Zero
+    SSC_FLT_ZERO,
+    ///Not a number (NaN)
+    SSC_FLT_NAN
 } SscFltType;
 
 ///32-bit floating point number representing zero

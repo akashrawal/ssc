@@ -31,33 +31,33 @@ typedef MmcMsg*  (* SscCreateReplyFn) (void *out_args);
 typedef void (* SscArgsFreeFn) (void *args);
 typedef struct
 {
-	size_t args_size;
-	SscReadMsgFn read_msg;
-	SscCreateReplyFn create_reply;
-	SscArgsFreeFn in_args_free;
+    size_t args_size;
+    SscReadMsgFn read_msg;
+    SscCreateReplyFn create_reply;
+    SscArgsFreeFn in_args_free;
 } SscSStub;
 
 //Base type for skeleton objects
 typedef struct
 {
-	int n_fns;
-	SscSStub *sstubs;
+    int n_fns;
+    SscSStub *sstubs;
 } SscSkel;
 
 
 //Servant type 
 typedef struct _SscServant SscServant;
 typedef void (* SscImplFn) 
-	(SscServant *servant, MmcMPContext *ctx, void *args);
+    (SscServant *servant, MmcMPContext *ctx, void *args);
 
 struct _SscServant
 {
-	MmcServant parent;
-	
-	const SscSkel *skel;
-	
-	void *user_data;
-	SscImplFn impl[]; 
+    MmcServant parent;
+    
+    const SscSkel *skel;
+    
+    void *user_data;
+    SscImplFn impl[]; 
 };
 
 SscServant *ssc_servant_new(const SscSkel *skel);

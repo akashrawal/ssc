@@ -21,44 +21,44 @@
 //Stack, not tested
 typedef struct 
 {
-	BstNode *node;
-	int isright;
+    BstNode *node;
+    int isright;
 } StackEl;
 
 typedef struct
 {
-	int top;
-	int alloc_len;
-	StackEl *data;
+    int top;
+    int alloc_len;
+    StackEl *data;
 } Stack;
 
 static void stack_init(Stack *stack)
 {
-	stack->top = 0;
-	stack->alloc_len = 16;
-	stack->data = (StackEl *) mmc_alloc
-		(sizeof(StackEl) * stack->alloc_len);
+    stack->top = 0;
+    stack->alloc_len = 16;
+    stack->data = (StackEl *) mmc_alloc
+        (sizeof(StackEl) * stack->alloc_len);
 }
 
 static void stack_push(Stack *stack, StackEl element)
 {
-	stack->data[stack->top] = element;
-	stack->top++;
-	if (stack->top == stack->alloc_len)
-	{
-		stack->alloc_len *= 2;
-		stack->data = (StackEl *) mmc_realloc
-			(stack->data, sizeof(StackEl) * stack->alloc_len);
-	}
+    stack->data[stack->top] = element;
+    stack->top++;
+    if (stack->top == stack->alloc_len)
+    {
+        stack->alloc_len *= 2;
+        stack->data = (StackEl *) mmc_realloc
+            (stack->data, sizeof(StackEl) * stack->alloc_len);
+    }
 }
 
 static StackEl stack_pop(Stack *stack)
 {
-	stack->top--;
-	return stack->data[stack->top];
+    stack->top--;
+    return stack->data[stack->top];
 }
 
 static void stack_free(Stack *stack)
 {
-	free(stack->data);
+    free(stack->data);
 }
