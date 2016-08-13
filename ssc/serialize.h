@@ -42,42 +42,42 @@
 ///serialized data will be.
 typedef struct 
 {
-    ///Size of the memory block
-    size_t n_bytes;
-    ///No. of submessages
-    size_t n_submsgs;
+	///Size of the memory block
+	size_t n_bytes;
+	///No. of submessages
+	size_t n_submsgs;
 } SscDLen;
 
 /**Initializes the counter
  * \param self A pointer to structure of type SscDLen
  */
 #define ssc_dlen_zero(self) \
-    (self)->n_bytes = (self)->n_submsgs = 0
+	(self)->n_bytes = (self)->n_submsgs = 0
 
 /**A structure to iterate over message. This can be used in
  * [de]serialization. 
  */
 typedef struct
 {
-    ///Current position in memory block
-    char *bytes;
-    ///A pointer that points just after the last byte in memory block
-    char *bytes_lim;
-    ///Current position in array of messages
-    MmcMsg **submsgs;
-    ///A pointer that points just after the last element in array of 
-    ///submessages
-    MmcMsg **submsgs_lim;
+	///Current position in memory block
+	char *bytes;
+	///A pointer that points just after the last byte in memory block
+	char *bytes_lim;
+	///Current position in array of messages
+	MmcMsg **submsgs;
+	///A pointer that points just after the last element in array of 
+	///submessages
+	MmcMsg **submsgs_lim;
 } SscMsgIter;
 
 /**A segment popped off an iterator
  */
 typedef struct
 {
-    ///Current position in byte stream
-    char *bytes;
-    ///Current position in block stream
-    MmcMsg **submsgs;
+	///Current position in byte stream
+	char *bytes;
+	///Current position in block stream
+	MmcMsg **submsgs;
 } SscSegment;
 
 /**Initializes the iterator to the start of the given message.
@@ -97,15 +97,15 @@ void ssc_msg_iter_init(SscMsgIter *self, MmcMsg *msg);
  * \return 0 if the operation was successful, -1 otherwise
  */
 int ssc_msg_iter_get_segment
-    (SscMsgIter *self, size_t n_bytes, size_t n_submsgs, 
-     SscSegment *res);
+	(SscMsgIter *self, size_t n_bytes, size_t n_submsgs, 
+	 SscSegment *res);
 
 /**Determines whether the iterator is at the end.*/
 //TODO: Replace macros with static inline functions
 static inline int ssc_msg_iter_at_end(SscMsgIter *self)
 {
-    return (((self)->bytes_lim - (self)->bytes) 
-     + ((self)->submsgs_lim - (self)->submsgs) ? 0 : 1);
+	return (((self)->bytes_lim - (self)->bytes) 
+	 + ((self)->submsgs_lim - (self)->submsgs) ? 0 : 1);
 }
 
 //writing unsigned integers
@@ -116,10 +116,10 @@ static inline int ssc_msg_iter_at_end(SscMsgIter *self)
  */
 #define ssc_segment_write_uint8(seg, val) \
 do { \
-    *((seg)->bytes) = val; \
-    (seg)->bytes += 1; \
+	*((seg)->bytes) = val; \
+	(seg)->bytes += 1; \
 } while (0)
-        
+		
 /**Assigns a 16-bit unsigned integer to current segment position
  * after converting to little endian and increments it accordingly.
  * \param seg Pointer to the segment (type SscSegment *)
@@ -129,11 +129,11 @@ do { \
  */
 #define ssc_segment_write_uint16(seg, lval) \
 do { \
-    char *le_ptr, *h_ptr; \
-    le_ptr = (seg)->bytes; \
-    h_ptr = (char *) &lval; \
-    ssc_uint16_copy_to_le(le_ptr, h_ptr); \
-    (seg)->bytes += 2; \
+	char *le_ptr, *h_ptr; \
+	le_ptr = (seg)->bytes; \
+	h_ptr = (char *) &lval; \
+	ssc_uint16_copy_to_le(le_ptr, h_ptr); \
+	(seg)->bytes += 2; \
 } while (0)
 
 /**Assigns a 32-bit unsigned integer to current segment position
@@ -145,11 +145,11 @@ do { \
  */
 #define ssc_segment_write_uint32(seg, lval) \
 do {\
-    char *le_ptr, *h_ptr; \
-    le_ptr = (seg)->bytes; \
-    h_ptr = (char *) &lval; \
-    ssc_uint32_copy_to_le(le_ptr, h_ptr); \
-    (seg)->bytes += 4; \
+	char *le_ptr, *h_ptr; \
+	le_ptr = (seg)->bytes; \
+	h_ptr = (char *) &lval; \
+	ssc_uint32_copy_to_le(le_ptr, h_ptr); \
+	(seg)->bytes += 4; \
 } while(0)
 
 /**Assigns a 64-bit unsigned integer to current segment position
@@ -161,11 +161,11 @@ do {\
  */
 #define ssc_segment_write_uint64(seg, lval) \
 do {\
-    char *le_ptr, *h_ptr; \
-    le_ptr = (seg)->bytes; \
-    h_ptr = (char *) &lval; \
-    ssc_uint64_copy_to_le(le_ptr, h_ptr); \
-    (seg)->bytes += 8; \
+	char *le_ptr, *h_ptr; \
+	le_ptr = (seg)->bytes; \
+	h_ptr = (char *) &lval; \
+	ssc_uint64_copy_to_le(le_ptr, h_ptr); \
+	(seg)->bytes += 8; \
 } while(0)
 
 //reading unsigned integers
@@ -176,8 +176,8 @@ do {\
  */
 #define ssc_segment_read_uint8(seg, lval) \
 do { \
-    lval = *((seg)->bytes); \
-    (seg)->bytes += 1; \
+	lval = *((seg)->bytes); \
+	(seg)->bytes += 1; \
 } while (0)
 
 /**Retrives a 16-bit unsigned integer from current segment position
@@ -187,11 +187,11 @@ do { \
  */
 #define ssc_segment_read_uint16(seg, lval) \
 do {\
-    char *le_ptr, *h_ptr; \
-    le_ptr = (seg)->bytes; \
-    h_ptr = (char *) &lval; \
-    ssc_uint16_copy_from_le(le_ptr, h_ptr); \
-    (seg)->bytes += 2; \
+	char *le_ptr, *h_ptr; \
+	le_ptr = (seg)->bytes; \
+	h_ptr = (char *) &lval; \
+	ssc_uint16_copy_from_le(le_ptr, h_ptr); \
+	(seg)->bytes += 2; \
 } while(0)
 
 /**Retrives a 32-bit unsigned integer from current segment position
@@ -201,11 +201,11 @@ do {\
  */
 #define ssc_segment_read_uint32(seg, lval) \
 do {\
-    char *le_ptr, *h_ptr; \
-    le_ptr = (seg)->bytes; \
-    h_ptr = (char *) &lval; \
-    ssc_uint32_copy_from_le(le_ptr, h_ptr); \
-    (seg)->bytes += 4; \
+	char *le_ptr, *h_ptr; \
+	le_ptr = (seg)->bytes; \
+	h_ptr = (char *) &lval; \
+	ssc_uint32_copy_from_le(le_ptr, h_ptr); \
+	(seg)->bytes += 4; \
 } while(0)
 
 /**Retrives a 64-bit unsigned integer from current segment position
@@ -215,11 +215,11 @@ do {\
  */
 #define ssc_segment_read_uint64(seg, lval) \
 do {\
-    char *le_ptr, *h_ptr; \
-    le_ptr = (seg)->bytes; \
-    h_ptr = (char *) &lval; \
-    ssc_uint64_copy_from_le(le_ptr, h_ptr); \
-    (seg)->bytes += 8; \
+	char *le_ptr, *h_ptr; \
+	le_ptr = (seg)->bytes; \
+	h_ptr = (char *) &lval; \
+	ssc_uint64_copy_from_le(le_ptr, h_ptr); \
+	(seg)->bytes += 8; \
 } while(0)
 
 #ifdef SSC_INT_2_COMPLEMENT
@@ -240,7 +240,7 @@ do {\
  * \param lval Value to store (type char)
  */
 #define ssc_segment_write_int8(seg, lval) \
-    ssc_segment_write_uint8(seg, ssc_int8_to_2_complement(lval))
+	ssc_segment_write_uint8(seg, ssc_int8_to_2_complement(lval))
 
 /**Assigns a 16-bit signed integer to current segment position
  * after converting to little endian and increments it accordingly.
@@ -251,8 +251,8 @@ do {\
  */
 #define ssc_segment_write_int16(seg, lval) \
 do { \
-    uint16_t lval_2c = ssc_int16_to_2_complement(lval); \
-    ssc_segment_write_uint16(seg, lval_2c); \
+	uint16_t lval_2c = ssc_int16_to_2_complement(lval); \
+	ssc_segment_write_uint16(seg, lval_2c); \
 } while(0)
 
 /**Assigns a 32-bit signed integer to current segment position
@@ -264,8 +264,8 @@ do { \
  */
 #define ssc_segment_write_int32(seg, lval) \
 do { \
-    uint32_t lval_2c = ssc_int32_to_2_complement(lval); \
-    ssc_segment_write_uint32(seg, lval_2c); \
+	uint32_t lval_2c = ssc_int32_to_2_complement(lval); \
+	ssc_segment_write_uint32(seg, lval_2c); \
 } while(0)
 
 /**Assigns a 64-bit signed integer to current segment position
@@ -277,8 +277,8 @@ do { \
  */
 #define ssc_segment_write_int64(seg, lval) \
 do { \
-    uint64_t lval_2c = ssc_int64_to_2_complement(lval); \
-    ssc_segment_write_uint64(seg, lval_2c); \
+	uint64_t lval_2c = ssc_int64_to_2_complement(lval); \
+	ssc_segment_write_uint64(seg, lval_2c); \
 } while(0)
 
 //reading signed integers
@@ -289,8 +289,8 @@ do { \
  */
 #define ssc_segment_read_int8(seg, lval) \
 do { \
-    ssc_segment_read_uint8(seg, lval); \
-    lval = ssc_int8_to_2_complement(lval); \
+	ssc_segment_read_uint8(seg, lval); \
+	lval = ssc_int8_to_2_complement(lval); \
 } while(0)
 
 /**Retrives a 16-bit signed integer from current segment position
@@ -300,8 +300,8 @@ do { \
  */
 #define ssc_segment_read_int16(seg, lval) \
 do { \
-    ssc_segment_read_uint16(seg, lval); \
-    lval = ssc_int16_to_2_complement(lval); \
+	ssc_segment_read_uint16(seg, lval); \
+	lval = ssc_int16_to_2_complement(lval); \
 } while(0)
 
 /**Retrives a 32-bit signed integer from current segment position
@@ -311,8 +311,8 @@ do { \
  */
 #define ssc_segment_read_int32(seg, lval) \
 do { \
-    ssc_segment_read_uint32(seg, lval); \
-    lval = ssc_int32_to_2_complement(lval); \
+	ssc_segment_read_uint32(seg, lval); \
+	lval = ssc_int32_to_2_complement(lval); \
 } while(0)
 
 /**Retrives a 64-bit signed integer from current segment position
@@ -322,8 +322,8 @@ do { \
  */
 #define ssc_segment_read_int64(seg, lval) \
 do { \
-    ssc_segment_read_uint64(seg, lval); \
-    lval = ssc_int64_to_2_complement(lval); \
+	ssc_segment_read_uint64(seg, lval); \
+	lval = ssc_int64_to_2_complement(lval); \
 } while(0)
 
 #endif
@@ -334,13 +334,13 @@ do { \
  */
 typedef struct
 {
-    ///Type of floating point value stored
-    SscFltType type;
-    /**The floating point value stored. It should store correct value 
-     * when _type_ is SSC_FLT_ZERO or SSC_FLT_NORMAL, otherwise
-     * it may store any value.
-     */
-    double val;
+	///Type of floating point value stored
+	SscFltType type;
+	/**The floating point value stored. It should store correct value 
+	 * when _type_ is SSC_FLT_ZERO or SSC_FLT_NORMAL, otherwise
+	 * it may store any value.
+	 */
+	double val;
 } SscValFlt;
 
 /**Stores the given floating point value at current segment position 

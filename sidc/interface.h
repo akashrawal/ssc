@@ -23,5 +23,5 @@ void ssc_iface_gen_declaration(SscSymbol *value, FILE *h_file);
 
 //Writes C code for given structure
 void ssc_iface_gen_code
-    (SscSymbol *value, FILE *c_file);
+	(SscSymbol *value, FILE *c_file);
 

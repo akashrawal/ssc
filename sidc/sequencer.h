@@ -20,8 +20,8 @@
 
 typedef struct
 {
-    size_t len;
-    SscSymbol **d;
+	size_t len;
+	SscSymbol **d;
 } SscSymbolArray;
 
 typedef struct _SscSequencer SscSequencer;
