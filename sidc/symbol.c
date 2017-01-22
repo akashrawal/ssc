@@ -35,7 +35,7 @@ struct _SscAllocator
 	SscAllocHandle *allocated;
 };
 
-mmc_rc_define(SscAllocator, ssc_allocator)
+mmc_rc_define(SscAllocator, ssc_allocator);
 
 SscAllocator *ssc_allocator_new()
 {
@@ -105,7 +105,7 @@ struct _SscSymbolDB
 	SscFileList *file_list;
 };
 
-mmc_rc_define(SscSymbolDB, ssc_symbol_db)
+mmc_rc_define(SscSymbolDB, ssc_symbol_db);
 
 SscDLen ssc_type_fundamental_sizes[13] =
 	{

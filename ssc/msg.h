@@ -1,5 +1,5 @@
-/* bst.h
- * Binary search tree for string lookups
+/* msg.h
+ * Stuff to help serialize message to a series of bytes
  * 
  * Copyright 2015 Akash Rawal
  * This file is part of Modular Middleware.
@@ -17,16 +17,27 @@
  * You should have received a copy of the GNU General Public License
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
 
-typedef struct _SscBst SscBst;
+//Protocol?
+//Breadth-first order. Appearantly, that is easier. 
 
-mmc_rc_declare(SscBst, ssc_bst);
+#define SSC_MSG_SUBMSG  (((uint32_t) 1) << 30)
+#define SSC_MSG_SIBLING (((uint32_t) 1) << 31)
+#define SSC_MSG_ALL     (SSC_MSG_SUBMSG | SSC_MSG_SIBLING)
 
-SscBst *ssc_bst_new();
+//Used to create arrays of memory blocks
+typedef struct
+{
+	void *mem;
+	size_t len;
+} SscMBlock;
 
-MmcStatus ssc_bst_insert(SscBst *bst, const char *key, void *value);
+size_t ssc_msg_count(MmcMsg *msg);
 
-void *ssc_bst_lookup(SscBst *bst, const char *key);
+void ssc_msg_create_layout
+	(MmcMsg *msg, size_t len, uint32_t *layout, SscMBlock *data);
+
+MmcMsg *ssc_msg_alloc_by_layout
+	(size_t len, uint32_t *layout, SscMBlock *data);
 
 

@@ -200,7 +200,7 @@ static int ssc_count_all_fns(SscSymbol *value)
 }
 
 //Array containing names of all functions
-mmc_declare_array(char *, SscFnList, ssc_fn_list)
+mmc_declare_array(char *, SscFnList, ssc_fn_list);
 
 static void ssc_fn_list_create(SscFnList *fl, SscSymbol *value)
 {
@@ -258,7 +258,7 @@ static void ssc_fn_list_create_with_parents
 static void ssc_fn_list_destroy(SscFnList *fl)
 {
 	int i;
-	int len = ssc_fn_list_length(fl);
+	int len = ssc_fn_list_size(fl);
 	
 	for (i = 0; i < len; i++)
 		free(fl->data[i]);
@@ -340,7 +340,7 @@ void ssc_iface_gen_code
 	
 	//Generate names of all functions including parent functions
 	ssc_fn_list_create_with_parents(fl, value);
-	fl_len = ssc_fn_list_length(fl);
+	fl_len = ssc_fn_list_size(fl);
 	
 	//Write separator comment
 	fprintf(c_file, 
@@ -351,7 +351,7 @@ void ssc_iface_gen_code
 	//Write skeleton definition
 	fprintf(c_file, 
 		"static SscSStub ssc_sstub_array__%s[%d] = {\n",
-		value->name, (int) ssc_fn_list_length(fl));
+		value->name, (int) ssc_fn_list_size(fl));
 	for (i = 0; i < fl_len; i++)
 	{
 		fprintf(c_file, 

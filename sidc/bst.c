@@ -111,7 +111,7 @@ struct _SscBst
 	BstNode *root;
 };
 
-mmc_rc_define(SscBst, ssc_bst)
+mmc_rc_define(SscBst, ssc_bst);
 
 SscBst *ssc_bst_new()
 {

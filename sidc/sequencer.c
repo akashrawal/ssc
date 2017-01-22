@@ -20,7 +20,7 @@
  
 #include "incl.h"
 
-mmc_declare_array(SscSymbol *, SscSymbolVector, ssc_symbol_vector)
+mmc_declare_array(SscSymbol *, SscSymbolVector, ssc_symbol_vector);
 
 struct _SscSequencer
 {
@@ -115,7 +115,7 @@ SscSymbolArray ssc_sequencer_destroy(SscSequencer *seqr)
 {
 	SscSymbolArray res;
 	
-	res.len = ssc_symbol_vector_length(&(seqr->vector));
+	res.len = ssc_symbol_vector_size(&(seqr->vector));
 	res.d = seqr->vector.data;
 	
 	ssc_symbol_db_unref(seqr->db);
