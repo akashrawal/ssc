@@ -34,10 +34,10 @@ typedef struct
 
 size_t ssc_msg_count(MmcMsg *msg);
 
-void ssc_msg_create_layout
-	(MmcMsg *msg, size_t len, uint32_t *layout, SscMBlock *data);
+void ssc_msg_create_layout(MmcMsg *msg, size_t len, uint32_t *layout);
 
-MmcMsg *ssc_msg_alloc_by_layout
-	(size_t len, uint32_t *layout, SscMBlock *data);
+MmcMsg *ssc_msg_alloc_by_layout(size_t len, uint32_t *layout);
+
+size_t ssc_msg_get_blocks(MmcMsg *msg, size_t len, SscMBlock *data);
 
 

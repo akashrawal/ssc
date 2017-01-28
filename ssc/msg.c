@@ -19,6 +19,7 @@
  */
 
 #include "incl.h"
+//TODO: Check for responses for allocation failures
 
 size_t ssc_msg_count(MmcMsg *msg)
 {
@@ -31,8 +32,7 @@ size_t ssc_msg_count(MmcMsg *msg)
 	return res;
 }
 
-void ssc_msg_create_layout
-	(MmcMsg *msg, size_t len, uint32_t *layout, SscMBlock *data)
+void ssc_msg_create_layout(MmcMsg *msg, size_t len, uint32_t *layout)
 {
 	int i, j;
 	MmcMsg **qdata;
@@ -72,18 +72,13 @@ void ssc_msg_create_layout
 
 			qlim++;
 		}
-
-		//Output memory block for it
-		data[i].mem = curmsg->mem;
-		data[i].len = curmsg->mem_len;
 	}
 
 	//Free the queue
 	free(qdata);
 }
 
-MmcMsg *ssc_msg_alloc_by_layout
-	(size_t len, uint32_t *layout, SscMBlock *data)
+MmcMsg *ssc_msg_alloc_by_layout(size_t len, uint32_t *layout)
 {
 	int i, j;
 	MmcMsg **qdata = NULL;
@@ -109,7 +104,9 @@ MmcMsg *ssc_msg_alloc_by_layout
 		return NULL;
 	
 	//Initialize queue
-	qdata = mmc_alloc(sizeof(MmcMsg) * len);
+	qdata = mmc_tryalloc(sizeof(MmcMsg) * len);
+	if (! qdata)
+		return NULL;
 	qlim = 1;
 
 	//Imitate the tree traversal using layout informaiton
@@ -126,6 +123,7 @@ MmcMsg *ssc_msg_alloc_by_layout
 		mem_len = layout_el & (~SSC_MSG_ALL);
 
 		//Count submessages
+		submsgs_len = 0;
 		if (layout_el & SSC_MSG_SUBMSG)
 		{
 			//Queue must never overflow
@@ -141,10 +139,6 @@ MmcMsg *ssc_msg_alloc_by_layout
 
 		//Create message
 		qdata[i] = mmc_msg_newa(mem_len, submsgs_len);
-		
-		//Output memory block
-		data[i].mem = qdata[i]->mem;
-		data[i].len = qdata[i]->mem_len;
 	}
 
 	//Check if tree traversal stopped due to queue underflow
@@ -170,4 +164,48 @@ MmcMsg *ssc_msg_alloc_by_layout
 	return res;
 #undef fail
 }
+
+size_t ssc_msg_get_blocks(MmcMsg *msg, size_t len, SscMBlock *data)
+{
+	int i, j;
+	MmcMsg **qdata;
+	int qlim;
+	int dc;
+	
+	//Initialize queue
+	qdata = mmc_alloc(sizeof(MmcMsg) * len);
+	qdata[0] = msg;
+	qlim = 1;
+
+	//Initialize output pointer
+	dc = 0;
+
+	//Iterate for each message in queue
+	for (i = 0; i < len; i++)
+	{
+		MmcMsg *curmsg = qdata[i];
+
+		//Push submessages onto queue
+		for (j = 0; j < curmsg->submsgs_len; j++)
+		{
+			qdata[qlim] = curmsg->submsgs[j];
+			qlim++;
+		}
+
+		//Output memory block if large enough
+		if (curmsg->mem_len > 0)
+		{
+			data[dc].mem = curmsg->mem;
+			data[dc].len = curmsg->mem_len;
+			dc++;
+		}
+	}
+
+	//Free the queue
+	free(qdata);
+
+	return dc;
+}
+
+
 
