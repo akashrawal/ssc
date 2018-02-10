@@ -1,6 +1,5 @@
 /* parser.y
- * Parser for SID language
- * 
+ * Parser for SID language 
  * Copyright 2015 Akash Rawal
  * This file is part of Modular Middleware.
  * 

@@ -39,20 +39,34 @@ int main(int argc, char *argv[])
 		printf("Usage: %s filename\n", argv[0]);
 		exit(1);
 	}
+	infile = argv[1];
 	
 	//Compute file names
 	{
+		char *infile_base;
 		int infile_len;
+
+		infile_base = strrchr(infile, '/');
+		if (infile_base)
+			infile_base++;
+		else
+			infile_base = infile;
+#ifdef _WIN32
+		infile_base = strrchr(infile_base, '\\');
+		if (infile_base)
+			infile_base++;
+		else
+			infile_base = infile;
+#endif
 		
-		infile = argv[1];
-		infile_len = strlen(infile);
+		infile_len = strlen(infile_base);
 		
 		c_file = mmc_alloc(infile_len + 3);
-		strcpy(c_file, infile);
+		strcpy(c_file, infile_base);
 		strcpy(c_file + infile_len, ".c");
 		
 		h_file = mmc_alloc(infile_len + 3);
-		strcpy(h_file, infile);
+		strcpy(h_file, infile_base);
 		strcpy(h_file + infile_len, ".h");
 	}
 	

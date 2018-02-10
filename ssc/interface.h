@@ -44,16 +44,21 @@ typedef struct
 	SscSStub *sstubs;
 } SscSkel;
 
+//Caller context
+//TODO: Complete this
+typedef struct
+{
+	
+} SscCallerCtx;
+
 
 //Servant type 
 typedef struct _SscServant SscServant;
 typedef void (* SscImplFn) 
-	(SscServant *servant, MmcMPContext *ctx, void *args);
+	(SscServant *servant, SscCallerCtx *ctx, void *args);
 
 struct _SscServant
 {
-	MmcServant parent;
-	
 	const SscSkel *skel;
 	
 	void *user_data;

@@ -1,5 +1,5 @@
 
-SUBDIRS = data ssc sidc
+SUBDIRS = data ssc sidc tests
 
 ACLOCAL_AMFLAGS = -I m4
 

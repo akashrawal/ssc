@@ -1,5 +1,5 @@
-/* incl.h
- * Headers
+/* proto_int.txt
+ * Just a prototype for WYSIWYG feel
  * 
  * Copyright 2015 Akash Rawal
  * This file is part of Modular Middleware.
@@ -18,19 +18,7 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//Dependencies
-#include <ssc/ssc.h>
-
-//TODO: Factor out this into unit test
-//Which main() function to use (for testing)
-#define SSC_TEST_NONE
-//#define SSC_TEST_BST
-
-//Include all headers
-#include "bst.h"
-#include "symbol.h"
-#include "parselib.h"
-#include "codegen.h"
-#include "structure.h"
-#include "interface.h"
-#include "sequencer.h"
+interface test
+{
+	increment(uint32 in) : (uint32 out)	;
+};

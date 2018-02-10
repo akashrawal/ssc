@@ -18,19 +18,16 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//Dependencies
-#include <ssc/ssc.h>
 
-//TODO: Factor out this into unit test
-//Which main() function to use (for testing)
-#define SSC_TEST_NONE
-//#define SSC_TEST_BST
+//Dependencies
+#include <mmc/mmc.h>
+
+#define ssc_error(...) mmc_context_error("SSC", __VA_ARGS__)
+#define ssc_warn(...) mmc_context_warn("SSC", __VA_ARGS__)
 
 //Include all headers
-#include "bst.h"
-#include "symbol.h"
-#include "parselib.h"
-#include "codegen.h"
-#include "structure.h"
+#include "types.h"
+#include "serialize.h"
 #include "interface.h"
-#include "sequencer.h"
+#include "msg.h"
+

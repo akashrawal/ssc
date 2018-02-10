@@ -20,6 +20,9 @@
 
 #include "incl.h"
 
+//TODO: Fix and complete this
+#if 0
+
 //Messages with a prefixed integer
 int ssc_read_prefix(MmcMsg *msg)
 {
@@ -128,3 +131,4 @@ SscServant *ssc_servant_new(const SscSkel *skel)
 	return servant;
 }
 
+#endif
