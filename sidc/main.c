@@ -31,43 +31,47 @@ int main(int argc, char *argv[])
 	SscSymbolDB *db;
 	
 	
-	char *c_file, *h_file, *infile;
+	char *c_file, *h_file, *infile, *outprefix;
 	
 	//Read arguments
-	if (argc != 2)
+	if (argc != 2 && argc != 3)
 	{
-		printf("Usage: %s filename\n", argv[0]);
+		printf("Usage: %s filename [output_prefix]\n", argv[0]);
 		exit(1);
 	}
 	infile = argv[1];
+	if (argc == 3)
+	{
+		outprefix = argv[2];
+	}
+	else
+	{
+		outprefix = infile;
+		char *tmp = outprefix;
+
+		tmp = strrchr(outprefix, '/');
+		if (tmp)
+			outprefix = tmp + 1;
+#ifdef _WIN32
+		tmp = strrchr(outprefix, '\\');
+		if (tmp)
+			outprefix = tmp + 1;
+#endif
+	}
 	
 	//Compute file names
 	{
-		char *infile_base;
-		int infile_len;
-
-		infile_base = strrchr(infile, '/');
-		if (infile_base)
-			infile_base++;
-		else
-			infile_base = infile;
-#ifdef _WIN32
-		infile_base = strrchr(infile_base, '\\');
-		if (infile_base)
-			infile_base++;
-		else
-			infile_base = infile;
-#endif
+		int outprefix_len;
 		
-		infile_len = strlen(infile_base);
+		outprefix_len = strlen(outprefix);
 		
-		c_file = mmc_alloc(infile_len + 3);
-		strcpy(c_file, infile_base);
-		strcpy(c_file + infile_len, ".c");
+		c_file = mmc_alloc(outprefix_len + 3);
+		strcpy(c_file, outprefix);
+		strcpy(c_file + outprefix_len, ".c");
 		
-		h_file = mmc_alloc(infile_len + 3);
-		strcpy(h_file, infile_base);
-		strcpy(h_file + infile_len, ".h");
+		h_file = mmc_alloc(outprefix_len + 3);
+		strcpy(h_file, outprefix);
+		strcpy(h_file + outprefix_len, ".h");
 	}
 	
 	//Create database
