@@ -313,11 +313,6 @@ void ssc_iface_gen_declaration(SscSymbol *value, FILE *h_file)
 			(iface->fns[i]->in, fl->data[i], args_in, h_file);
 		ssc_arglist_gen_declaration
 			(iface->fns[i]->out, fl->data[i], args_out, h_file);
-			
-		//Structure containing stubs
-		fprintf(h_file, 
-		"extern MmcStub %s__stub[1];\n\n",
-			fl->data[i]);
 	}
 	
 	//Prevent multiple declarations: end
@@ -392,18 +387,6 @@ void ssc_iface_gen_code
 			(iface->fns[i]->in, fl->data[base + i], args_in, base + i, c_file);
 		ssc_arglist_gen_code
 			(iface->fns[i]->out, fl->data[base + i], args_out, 0, c_file);
-			
-		//Package stubs into a structure
-		//TODO: Try a compile time solution instead of
-		//generating a structure
-		fprintf(c_file, 
-		"MmcStub %s__stub[1] = {{\n"
-		"    (MmcStubCreateMsg) %s__create_msg,\n"
-		"    (MmcStubReadReply) %s__read_reply\n"
-		"}};\n\n",
-			fl->data[base + i], 
-			fl->data[base + i], 
-			fl->data[base + i]);
 	}
 	
 	//Garbage collection

@@ -26,7 +26,7 @@ libssc_la_SOURCES = $(ssc_c) $(ssc_h)
 	        
 nodist_libssc_la_SOURCES = generated.h
 libssc_la_CFLAGS = -Wall -I$(top_builddir) -I$(top_srcdir)
-libssc_la_LDFLAGS = -lm $(MMC_LIBS)
+libssc_la_LIBADD = -lm $(MMC_LIBS)
 
 #Headers
 sscincludedir = $(includedir)/ssc
