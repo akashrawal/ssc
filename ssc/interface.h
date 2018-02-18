@@ -44,13 +44,14 @@ typedef struct
 	SscSStub *sstubs;
 } SscSkel;
 
-//Caller context
-//TODO: Complete this
-typedef struct
+//Caller context (for returning)
+typedef struct _SscCallerCtx SscCallerCtx;
+typedef void (*SscReturnFn)(SscCallerCtx *ctx, MmcMsg *reply_msg);
+struct _SscCallerCtx
 {
-	
-} SscCallerCtx;
-
+	int method_id;
+	SscReturnFn return_fn;
+};
 
 //Servant type 
 typedef struct _SscServant SscServant;
@@ -59,14 +60,37 @@ typedef void (* SscImplFn)
 
 struct _SscServant
 {
+	MmcRC parent;
 	const SscSkel *skel;
 	
 	void *user_data;
 	SscImplFn impl[]; 
 };
 
+mmc_rc_declare(SscServant, ssc_servant);
+
+/**Creates a new servant using given skeleton.
+ * \param skel Skeleton of the interface to expose
+ * \return A newly created servant. Remember to add implementations.
+ */
 SscServant *ssc_servant_new(const SscSkel *skel);
 
+/**Sends a message to the servant.
+ * The servant will deserialize the message with the skeleton and call the 
+ * correct implementation function. 
+ * (If that fails an error message is sent back)
+ * \param servant The servant to dispatch the message to.
+ * \param msg The message.\
+ * \param ctx Caller context,
+ *            assign the callback function and pass the struct here.
+ */
+void ssc_servant_call(SscServant *servant, MmcMsg *msg, SscCallerCtx *ctx);
 
-
-
+/**Returns the reply from the implementation. Used by implementation.
+ * \param servant The servant that received message
+ * \param ctx Caller context received by the implementation when receiving a 
+ *            message.
+ * \param args Pointer to struct containing return arguments, or NULL if 
+ *             there aren't any.
+ */
+void ssc_servant_return(SscServant *servant, SscCallerCtx *ctx, void *args);

@@ -20,8 +20,6 @@
 
 #include "incl.h"
 
-//TODO: Fix and complete this
-#if 0
 
 //Messages with a prefixed integer
 int ssc_read_prefix(MmcMsg *msg)
@@ -46,10 +44,8 @@ MmcMsg *ssc_create_prefixed_empty_msg(uint8_t prefix)
 
 //Servant type 
 
-static void ssc_servant_handle_msg
-	(MmcServant *p, MmcMsg *msg, MmcMPContext *ctx)
+void ssc_servant_call(SscServant *servant, MmcMsg *msg, SscCallerCtx *ctx)
 {
-	SscServant *servant = (SscServant *) p;
 	int id;
 	void *args = NULL;
 	SscSStub *sstub;
@@ -86,6 +82,7 @@ static void ssc_servant_handle_msg
 	}
 	
 	//Call the function
+	//TODO: Return error for unimplemented functions.
 	(* servant->impl[id])(servant, ctx, args);
 	
 	//Free arguments
@@ -100,16 +97,24 @@ static void ssc_servant_handle_msg
 fail:
 	//Send error message back
 	reply_msg = ssc_create_prefixed_empty_msg(1);
-	mmc_mp_context_reply(ctx, reply_msg);
+	(* ctx->return_fn)(ctx, reply_msg);
 	mmc_msg_unref(reply_msg);
 	
 	if (args)
 		free(args);
 }
 
-static void ssc_servant_destroy(MmcServant *p)
+void ssc_servant_return(SscServant *servant, SscCallerCtx *ctx, void *args)
 {
-	
+	MmcMsg *reply_msg = (* servant->skel->sstubs[ctx->method_id].create_reply)
+		(args);
+	(* ctx->return_fn)(ctx, reply_msg);
+	mmc_msg_unref(reply_msg);
+}
+
+static void ssc_servant_destroy(SscServant *servant)
+{
+	free(servant);	
 }
 
 SscServant *ssc_servant_new(const SscSkel *skel)
@@ -117,18 +122,18 @@ SscServant *ssc_servant_new(const SscSkel *skel)
 	SscServant *servant;
 	int i;
 	
-	servant = (SscServant *) mmc_servant_create
-		(sizeof(SscServant) + (sizeof(SscImplFn) * skel->n_fns),
-		ssc_servant_handle_msg,
-		ssc_servant_destroy);
+	servant = (SscServant *) mmc_alloc
+		(sizeof(SscServant) + (sizeof(void *) * skel->n_fns));
+
+	mmc_rc_init(servant);
 	
 	servant->skel = skel;
 	servant->user_data = NULL;
-	
 	for (i = 0; i < skel->n_fns; i++)
 		servant->impl[i] = NULL;
 	
 	return servant;
 }
 
-#endif
+mmc_rc_define(SscServant, ssc_servant);
+
