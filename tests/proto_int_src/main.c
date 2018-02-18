@@ -18,26 +18,9 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <ssc/ssc.h>
+#include "libtest.h"
 #include "proto_int_src/idl.h"
 
-typedef struct
-{
-	SscCallerCtx parent;
-	MmcMsg *reply;
-} TestCallerCtx;
-
-void test_caller_ctx_return_fn(SscCallerCtx *p_ctx, MmcMsg *reply)
-{
-	TestCallerCtx *ctx = (TestCallerCtx *) p_ctx;
-	ctx->reply = reply;
-}
-
-void test_caller_ctx_init(TestCallerCtx *ctx)
-{
-	memset(ctx, 0, sizeof(TestCallerCtx));
-	ctx->parent.return_fn = test_caller_ctx_return_fn;
-}
 
 void test_increment_impl(SscServant *servant, SscCallerCtx *ctx, void *argp)
 {
