@@ -18,7 +18,7 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-interface Test
+interface TestIface
 {
 	increment(uint32 in) : (uint32 out)	;
 };

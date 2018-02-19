@@ -22,10 +22,11 @@
 #include "proto_int_src/idl.h"
 
 
-void test_increment_impl(SscServant *servant, SscCallerCtx *ctx, void *argp)
+void test_iface_increment_impl
+	(SscServant *servant, SscCallerCtx *ctx, void *argp)
 {
-	Test__increment__in_args *args = argp;
-	Test__increment__out_args  out_args;
+	TestIface__increment__in_args *args = argp;
+	TestIface__increment__out_args  out_args;
 
 	out_args.out = args->in + 1;
 	
@@ -36,20 +37,20 @@ void test_increment_impl(SscServant *servant, SscCallerCtx *ctx, void *argp)
 void test_call(SscServant *servant, int val)
 {
 	TestCallerCtx ctx;
-	Test__increment__in_args in_args;
-	Test__increment__out_args out_args;
+	TestIface__increment__in_args in_args;
+	TestIface__increment__out_args out_args;
 
 	//Initialize caller context
 	test_caller_ctx_init(&ctx);
 
 	//Call the 'remote' procedure
 	in_args.in = val;
-	MmcMsg *msg = Test__increment__create_msg(&in_args);
+	MmcMsg *msg = TestIface__increment__create_msg(&in_args);
 	ssc_servant_call(servant, msg, (SscCallerCtx *) &ctx);
 	mmc_msg_unref(msg);
 
 	//Deserialize the reply returned
-	if (Test__increment__read_reply(ctx.reply, &out_args) == MMC_FAILURE)
+	if (TestIface__increment__read_reply(ctx.reply, &out_args) == MMC_FAILURE)
 		ssc_error("Failed to deserialize the reply");
 	mmc_msg_unref(ctx.reply);
 
@@ -62,10 +63,10 @@ void test_call(SscServant *servant, int val)
 int main()
 {
 	//Create servant
-	SscServant *servant = ssc_servant_new(Test);
+	SscServant *servant = ssc_servant_new(TestIface);
 
 	//Implement functions
-	servant->impl[Test__increment__ID] = test_increment_impl;
+	servant->impl[TestIface__increment__ID] = test_iface_increment_impl;
 
 	//Test calls
 	test_call(servant, 1);
