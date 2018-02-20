@@ -18,8 +18,8 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "libtest.h"
-#include "proto_int_src/idl.h"
+#include <tests/libtest.h>
+#include "idl.h"
 
 
 void test_iface_increment_impl

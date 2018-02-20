@@ -173,11 +173,13 @@ AC_SUBST([SSC_UINT64_ENDIAN], [$ssc_cv_endian_uint64])
 AC_SUBST([SSC_INT_2COMP], [$ssc_cv_bool_2complement])
 
 AC_CONFIG_FILES([Makefile
+				 logcc.sh
                  data/Makefile
                  data/ssc.pc
                  ssc/Makefile
                  ssc/config.sh
                  sidc/Makefile
-				 tests/Makefile])
+				 tests/Makefile
+				 tests/proto_int/Makefile])
 AC_CONFIG_HEADERS([config.h])
 AC_OUTPUT
