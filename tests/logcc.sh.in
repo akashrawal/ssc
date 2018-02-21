@@ -21,6 +21,7 @@
 
 top_builddir="@abs_top_builddir@"
 vg_cmd="valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all"
+vg_cmd="$vg_cmd --error-exitcode=3"
 
 testcase="$1"
 
@@ -32,7 +33,7 @@ run_program() {
 	fi
 }
 
-if test "${testcase##*.}" != "$testcase"; then
+if test "${testcase##*.}" == ".txt"; then
 	#IDL test
 	run_program "$top_builddir/sidc/sidc" "$testcase"
 else

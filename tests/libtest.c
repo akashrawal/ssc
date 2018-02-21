@@ -23,6 +23,7 @@
 static void test_caller_ctx_return_fn(SscCallerCtx *p_ctx, MmcMsg *reply)
 {
 	TestCallerCtx *ctx = (TestCallerCtx *) p_ctx;
+	mmc_msg_ref(reply);
 	ctx->reply = reply;
 }
 
