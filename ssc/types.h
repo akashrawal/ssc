@@ -24,8 +24,6 @@
  * 2. Signed integers will be represented in two's complement form.
  */
  
-//TODO: try converting macros to static inline functions
-
 #include <ssc/generated.h>
 
 /**
@@ -43,92 +41,56 @@
  */
 
 //byte order conversion
+//TODO: Generate endianness independent code when
+//      SSC_UINT_UNKNOWN_ENDIAN is defined
 
-//Common stuff used by all conversion logic
-/**Copies a 16-bit wide unsigned integer from h_ptr, converts it to
- * little endian byte order, and then stores it at le_ptr.
- * \param le_ptr Pointer to store converted value
- * \param h_ptr Pointer where value to be converted is stored
- */
-#define ssc_uint16_copy_to_le(le_ptr, h_ptr) \
-do { \
-	((char *) (le_ptr))[SSC_UINT16_BYTE_0_SIGNIFICANCE] = ((char *) (h_ptr))[0]; \
-	((char *) (le_ptr))[SSC_UINT16_BYTE_1_SIGNIFICANCE] = ((char *) (h_ptr))[1]; \
-} while (0)
+static inline uint16_t ssc_uint16_swap_le_be(uint16_t v)
+{
+	uint16_t r;
+	uint8_t *av = (uint8_t *) &v;
+	uint8_t *ar = (uint8_t *) &r;
 
-/**Copies a 16-bit wide unsigned integer from le_ptr, converts it to
- * host byte order, and then stores it at h_ptr.
- * \param le_ptr Pointer where value to be converted is stored 
- * \param h_ptr Pointer to store converted value
- */
-#define ssc_uint16_copy_from_le(le_ptr, h_ptr) \
-do { \
-	((char *) (h_ptr))[0] = ((char *) (le_ptr))[SSC_UINT16_BYTE_0_SIGNIFICANCE]; \
-	((char *) (h_ptr))[1] = ((char *) (le_ptr))[SSC_UINT16_BYTE_1_SIGNIFICANCE]; \
-} while (0)
+	ar[0] = av[1];
+	ar[1] = av[0];
 
-/**Copies a 32-bit wide unsigned integer from h_ptr, converts it to
- * little endian byte order, and then stores it at le_ptr.
- * \param le_ptr Pointer to store converted value
- * \param h_ptr Pointer where value to be converted is stored
- */
-#define ssc_uint32_copy_to_le(le_ptr, h_ptr) \
-do { \
-	((char *) (le_ptr))[SSC_UINT32_BYTE_0_SIGNIFICANCE] = ((char *) (h_ptr))[0]; \
-	((char *) (le_ptr))[SSC_UINT32_BYTE_1_SIGNIFICANCE] = ((char *) (h_ptr))[1]; \
-	((char *) (le_ptr))[SSC_UINT32_BYTE_2_SIGNIFICANCE] = ((char *) (h_ptr))[2]; \
-	((char *) (le_ptr))[SSC_UINT32_BYTE_3_SIGNIFICANCE] = ((char *) (h_ptr))[3]; \
-} while (0)
+	return r;
+}
 
-/**Copies a 32-bit wide unsigned integer from le_ptr, converts it to
- * host byte order, and then stores it at h_ptr.
- * \param le_ptr Pointer where value to be converted is stored 
- * \param h_ptr Pointer to store converted value
- */
-#define ssc_uint32_copy_from_le(le_ptr, h_ptr) \
-do { \
-	((char *) (h_ptr))[0] = ((char *) (le_ptr))[SSC_UINT32_BYTE_0_SIGNIFICANCE]; \
-	((char *) (h_ptr))[1] = ((char *) (le_ptr))[SSC_UINT32_BYTE_1_SIGNIFICANCE]; \
-	((char *) (h_ptr))[2] = ((char *) (le_ptr))[SSC_UINT32_BYTE_2_SIGNIFICANCE]; \
-	((char *) (h_ptr))[3] = ((char *) (le_ptr))[SSC_UINT32_BYTE_3_SIGNIFICANCE]; \
-} while (0)
+static inline uint32_t ssc_uint32_swap_le_be(uint32_t v)
+{
+	uint32_t r;
+	uint8_t *av = (uint8_t *) &v;
+	uint8_t *ar = (uint8_t *) &r;
 
-/**Copies a 64-bit wide unsigned integer from h_ptr, converts it to
- * little endian byte order, and then stores it at le_ptr.
- * \param le_ptr Pointer to store converted value
- * \param h_ptr Pointer where value to be converted is stored
- */
-#define ssc_uint64_copy_to_le(le_ptr, h_ptr) \
-do { \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_0_SIGNIFICANCE] = ((char *) (h_ptr))[0]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_1_SIGNIFICANCE] = ((char *) (h_ptr))[1]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_2_SIGNIFICANCE] = ((char *) (h_ptr))[2]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_3_SIGNIFICANCE] = ((char *) (h_ptr))[3]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_4_SIGNIFICANCE] = ((char *) (h_ptr))[4]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_5_SIGNIFICANCE] = ((char *) (h_ptr))[5]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_6_SIGNIFICANCE] = ((char *) (h_ptr))[6]; \
-	((char *) (le_ptr))[SSC_UINT64_BYTE_7_SIGNIFICANCE] = ((char *) (h_ptr))[7]; \
-} while (0)
+	ar[0] = av[3];
+	ar[1] = av[2];
+	ar[2] = av[1];
+	ar[3] = av[0];
 
-/**Copies a 64-bit wide unsigned integer from le_ptr, converts it to
- * host byte order, and then stores it at h_ptr.
- * \param le_ptr Pointer where value to be converted is stored 
- * \param h_ptr Pointer to store converted value
- */
-#define ssc_uint64_copy_from_le(le_ptr, h_ptr) \
-do { \
-	((char *) (h_ptr))[0] = ((char *) (le_ptr))[SSC_UINT64_BYTE_0_SIGNIFICANCE]; \
-	((char *) (h_ptr))[1] = ((char *) (le_ptr))[SSC_UINT64_BYTE_1_SIGNIFICANCE]; \
-	((char *) (h_ptr))[2] = ((char *) (le_ptr))[SSC_UINT64_BYTE_2_SIGNIFICANCE]; \
-	((char *) (h_ptr))[3] = ((char *) (le_ptr))[SSC_UINT64_BYTE_3_SIGNIFICANCE]; \
-	((char *) (h_ptr))[4] = ((char *) (le_ptr))[SSC_UINT64_BYTE_4_SIGNIFICANCE]; \
-	((char *) (h_ptr))[5] = ((char *) (le_ptr))[SSC_UINT64_BYTE_5_SIGNIFICANCE]; \
-	((char *) (h_ptr))[6] = ((char *) (le_ptr))[SSC_UINT64_BYTE_6_SIGNIFICANCE]; \
-	((char *) (h_ptr))[7] = ((char *) (le_ptr))[SSC_UINT64_BYTE_7_SIGNIFICANCE]; \
-} while (0)
+	return r;
+}
 
-//16-bit
-#ifndef SSC_UINT16_LITTLE_ENDIAN
+static inline uint64_t ssc_uint64_swap_le_be(uint64_t v)
+{
+	uint64_t r;
+	uint8_t *av = (uint8_t *) &v;
+	uint8_t *ar = (uint8_t *) &r;
+
+	ar[0] = av[7];
+	ar[1] = av[6];
+	ar[2] = av[5];
+	ar[3] = av[4];
+	ar[4] = av[3];
+	ar[5] = av[2];
+	ar[6] = av[1];
+	ar[7] = av[0];
+
+	return r;
+}
+
+//TODO: How to use autotools for mixed endian systems?
+//TODO: Copy documentation here
+
 /**Converts a 16-bit integer from native byte order to little endian
  * byte order and vice versa.
  * 
@@ -139,13 +101,15 @@ do { \
  * \param val an int16_t value in little-endian or native byte order
  * \return val converted to the opposite byte order
  */
-uint16_t ssc_uint16_swap_native_le(uint16_t val);
-#else 
-#define ssc_uint16_swap_native_le(val) ((uint16_t) (val))
+static inline uint16_t ssc_uint16_swap_native_le(uint16_t v)
+{
+#ifdef SSC_UINT_BIG_ENDIAN
+	return ssc_uint16_swap_le_be(v);
+#else
+	return v;
 #endif
+}
 
-//32-bit
-#ifndef SSC_UINT32_LITTLE_ENDIAN
 /**Converts a 32-bit integer from native byte order to little endian
  * byte order.
  * 
@@ -154,7 +118,14 @@ uint16_t ssc_uint16_swap_native_le(uint16_t val);
  * \param val an integer in native byte order
  * \return val converted to little endian byte order
  */
-uint32_t ssc_uint32_to_le(uint32_t val);
+static inline uint32_t ssc_uint32_to_le(uint32_t v)
+{
+#ifdef SSC_UINT_BIG_ENDIAN
+	return ssc_uint32_swap_le_be(v);
+#else
+	return v;
+#endif
+}
 
 /**Converts a 32-bit integer from little endian byte order to native
  * byte order.
@@ -164,15 +135,15 @@ uint32_t ssc_uint32_to_le(uint32_t val);
  * \param val an integer in little endian byte order
  * \return val converted to native byte order
  */
-uint32_t ssc_uint32_from_le(uint32_t val);
-
+static inline uint32_t ssc_uint32_from_le(uint32_t v)
+{
+#ifdef SSC_UINT_BIG_ENDIAN
+	return ssc_uint32_swap_le_be(v);
 #else
-#define ssc_uint32_to_le(val) ((uint32_t) (val))
-#define ssc_uint32_from_le(val) ((uint32_t) (val))
+	return v;
 #endif
+}
 
-//64-bit
-#ifndef SSC_UINT64_LITTLE_ENDIAN
 /**Converts a 64-bit integer from native byte order to little endian
  * byte order.
  * 
@@ -181,7 +152,14 @@ uint32_t ssc_uint32_from_le(uint32_t val);
  * \param val an integer in native byte order
  * \return val converted to little endian byte order
  */
-uint64_t ssc_uint64_to_le(uint64_t val);
+static inline uint64_t ssc_uint64_to_le(uint64_t v)
+{
+#ifdef SSC_UINT_BIG_ENDIAN
+	return ssc_uint64_swap_le_be(v);
+#else
+	return v;
+#endif
+}
 
 /**Converts a 64-bit integer from little endian byte order to native
  * byte order.
@@ -191,20 +169,159 @@ uint64_t ssc_uint64_to_le(uint64_t val);
  * \param val an integer in little endian byte order
  * \return val converted to native byte order
  */
-uint64_t ssc_uint64_from_le(uint64_t val);
-
+static inline uint64_t ssc_uint64_from_le(uint64_t v)
+{
+#ifdef SSC_UINT_BIG_ENDIAN
+	return ssc_uint64_swap_le_be(v);
 #else
-#define ssc_uint64_to_le(val) ((uint64_t) (val))
-#define ssc_uint64_from_le(val) ((uint64_t) (val))
+	return v;
+#endif
+}
+
+
+//Unaligned Load/store macros
+
+#ifdef SSC_UINT_BIG_ENDIAN
+#define SSC_BYTE_SIGNIFICANCE(type, idx) ((sizeof(type)/8) - (idx))
+#else
+#define SSC_BYTE_SIGNIFICANCE(type, idx) (idx)
 #endif
 
+/**Loads a 16-bit wide little-endian unsigned integer
+ * from given memory location, converting it to host byte order.
+ * \param le Pointer to the little endian value
+ * \return The value in host byte order
+ */
+static inline uint16_t ssc_uint16_load_le(void *le)
+{
+	uint8_t *le_a = (uint8_t *) le;
+	union 
+	{
+		uint16_t v;
+		uint8_t a[sizeof(uint16_t)];
+	} h;
+	h.a[0] = le_a[SSC_BYTE_SIGNIFICANCE(uint16_t, 0)];
+	h.a[1] = le_a[SSC_BYTE_SIGNIFICANCE(uint16_t, 1)];
+	return h.v;
+}
+
+/**Loads a 32-bit wide little-endian unsigned integer
+ * from given memory location, converting it to host byte order.
+ * \param le Pointer to the little endian value
+ * \return The value in host byte order
+ */
+static inline uint32_t ssc_uint32_load_le(void *le)
+{
+	uint8_t *le_a = (uint8_t *) le;
+	union 
+	{
+		uint32_t v;
+		uint8_t a[sizeof(uint32_t)];
+	} h;
+	h.a[0] = le_a[SSC_BYTE_SIGNIFICANCE(uint32_t, 0)];
+	h.a[1] = le_a[SSC_BYTE_SIGNIFICANCE(uint32_t, 1)];
+	h.a[2] = le_a[SSC_BYTE_SIGNIFICANCE(uint32_t, 2)];
+	h.a[3] = le_a[SSC_BYTE_SIGNIFICANCE(uint32_t, 3)];
+	return h.v;
+}
+
+/**Loads a 64-bit wide little-endian unsigned integer
+ * from given memory location, converting it to host byte order.
+ * \param le Pointer to the little endian value
+ * \return The value in host byte order
+ */
+static inline uint64_t ssc_uint64_load_le(void *le)
+{
+	uint8_t *le_a = (uint8_t *) le;
+	union 
+	{
+		uint64_t v;
+		uint8_t a[sizeof(uint64_t)];
+	} h;
+	h.a[0] = le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 0)];
+	h.a[1] = le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 1)];
+	h.a[2] = le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 2)];
+	h.a[3] = le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 3)];
+	h.a[4] = le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 4)];
+	h.a[5] = le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 5)];
+	h.a[6] = le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 6)];
+	h.a[7] = le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 7)];
+	return h.v;
+}
+
+/**Stores a 16-bit wide integer in little-endian byte order,
+ * after converting it from host byte order
+ * \param le Pointer to the little endian value
+ * \param v Value in host byte order to store
+ */
+static inline void ssc_uint16_store_le(void *le, uint16_t v)
+{
+	uint8_t *le_a = (uint8_t *) le;
+	union 
+	{
+		uint16_t v;
+		uint8_t a[sizeof(uint16_t)/8];
+	} h;
+	h.v = v;
+	le_a[SSC_BYTE_SIGNIFICANCE(uint16_t, 0)] = h.a[0];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint16_t, 1)] = h.a[1];
+}
+
+/**Stores a 32-bit wide integer in little-endian byte order,
+ * after converting it from host byte order
+ * \param le Pointer to the little endian value
+ * \param v Value in host byte order to store
+ */
+static inline void ssc_uint32_store_le(void *le, uint32_t v)
+{
+	uint8_t *le_a = (uint8_t *) le;
+	union 
+	{
+		uint32_t v;
+		uint8_t a[sizeof(uint32_t)/8];
+	} h;
+	h.v = v;
+	le_a[SSC_BYTE_SIGNIFICANCE(uint32_t, 0)] = h.a[0];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint32_t, 1)] = h.a[1];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint32_t, 2)] = h.a[2];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint32_t, 3)] = h.a[3];
+}
+
+/**Stores a 64-bit wide integer in little-endian byte order,
+ * after converting it from host byte order
+ * \param le Pointer to the little endian value
+ * \param v Value in host byte order to store
+ */
+static inline void ssc_uint64_store_le(void *le, uint64_t v)
+{
+	uint8_t *le_a = (uint8_t *) le;
+	union 
+	{
+		uint64_t v;
+		uint8_t a[sizeof(uint64_t)/8];
+	} h;
+	h.v = v;
+	le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 0)] = h.a[0];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 1)] = h.a[1];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 2)] = h.a[2];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 3)] = h.a[3];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 4)] = h.a[4];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 5)] = h.a[5];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 6)] = h.a[6];
+	le_a[SSC_BYTE_SIGNIFICANCE(uint64_t, 7)] = h.a[7];
+}
+
 //Two's complement conversions for signed integers
+#if INT8_MIN == -128
+#define SSC_INT_2_COMPLEMENT
+#endif
+
 #ifndef SSC_INT_2_COMPLEMENT
 /**Converts a signed char to two's complement form
  * \param val signed char to convert
  * \return two's complement form of val
  */
-unsigned char ssc_int8_to_2_complement(char val)
+unsigned char ssc_int8_to_2_complement(char val);
 
 /**Converts a 16-bit signed integer to two's complement form
  * \param val int16_t to convert

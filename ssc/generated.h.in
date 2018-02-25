@@ -1,0 +1,38 @@
+/* generated.h.in
+ * Target system dependent configuration
+ * 
+ * Copyright 2015 Akash Rawal
+ * This file is part of Modular Middleware.
+ * 
+ * Modular Middleware is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Modular Middleware is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/* Ever wonder why this is not in config.h.in?
+ *
+ * This is because ssc/generated.h is installed along with other SSC
+ * header files.
+ *
+ * autoheader adds tons of definitions we don't really need and
+ * they aren't even prefixed with 'SSC_' namespace, so there's no way 
+ * we can install config.h generated from autoheader generated config.h.in.
+ */
+
+//Define to 1 on systems with big endian byte order.
+#undef SSC_UINT_BIG_ENDIAN
+
+//Define to 1 on systems with little endian byte order.
+#undef SSC_UINT_LITTLE_ENDIAN
+
+//Define to 1 if endianness could not be determined configure time.
+#undef SSC_UINT_UNKNOWN_ENDIAN

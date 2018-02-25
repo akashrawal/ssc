@@ -101,7 +101,6 @@ int ssc_msg_iter_get_segment
 	 SscSegment *res);
 
 /**Determines whether the iterator is at the end.*/
-//TODO: Replace macros with static inline functions
 static inline int ssc_msg_iter_at_end(SscMsgIter *self)
 {
 	return (((self)->bytes_lim - (self)->bytes) 
@@ -111,116 +110,96 @@ static inline int ssc_msg_iter_at_end(SscMsgIter *self)
 //writing unsigned integers
 /**Stores a 1-byte unsigned char to the current segment position
  * and increments it accordingly.
- * \param seg Pointer to the segment (type SscSegment *)
- * \param val Value to store (type: unsigned char)
+ * \param seg Pointer to the segment
+ * \param val Value to store
  */
-#define ssc_segment_write_uint8(seg, val) \
-do { \
-	*((seg)->bytes) = val; \
-	(seg)->bytes += 1; \
-} while (0)
+static inline void ssc_segment_write_uint8(SscSegment *seg, uint8_t val)
+{
+	*(seg->bytes) = val;
+	seg->bytes += 1;
+}
 		
 /**Assigns a 16-bit unsigned integer to current segment position
  * after converting to little endian and increments it accordingly.
- * \param seg Pointer to the segment (type SscSegment *)
- * \param lval Variable of type uint16_t holding the value to assign
- *        (Must be a variable. To write a constant assign it to a variable
- *        first)
+ * \param seg Pointer to the segment
+ * \param val Value to store
  */
-#define ssc_segment_write_uint16(seg, lval) \
-do { \
-	char *le_ptr, *h_ptr; \
-	le_ptr = (seg)->bytes; \
-	h_ptr = (char *) &lval; \
-	ssc_uint16_copy_to_le(le_ptr, h_ptr); \
-	(seg)->bytes += 2; \
-} while (0)
+static inline void ssc_segment_write_uint16(SscSegment *seg, uint16_t val)
+{
+	ssc_uint16_store_le(seg->bytes, val);
+	seg->bytes += 2;
+}
 
 /**Assigns a 32-bit unsigned integer to current segment position
  * after converting to little endian and increments it accordingly.
- * \param seg Pointer to the segment (type SscSegment *)
- * \param lval Variable of type uint32_t holding the value to assign
- *        (Must be a variable. To write a constant assign it to a variable
- *        first)
+ * \param seg Pointer to the segment
+ * \param val Value to store
  */
-#define ssc_segment_write_uint32(seg, lval) \
-do {\
-	char *le_ptr, *h_ptr; \
-	le_ptr = (seg)->bytes; \
-	h_ptr = (char *) &lval; \
-	ssc_uint32_copy_to_le(le_ptr, h_ptr); \
-	(seg)->bytes += 4; \
-} while(0)
+static inline void ssc_segment_write_uint32(SscSegment *seg, uint32_t val)
+{
+	ssc_uint32_store_le(seg->bytes, val);
+	seg->bytes += 4;
+}
 
 /**Assigns a 64-bit unsigned integer to current segment position
  * after converting to little endian and increments it accordingly.
- * \param seg Pointer to the segment (type SscSegment *)
- * \param lval Variable of type uint64_t holding the value to assign
- *        (Must be a variable. To write a constant assign it to a variable
- *        first)
+ * \param seg Pointer to the segment
+ * \param val Value to store
  */
-#define ssc_segment_write_uint64(seg, lval) \
-do {\
-	char *le_ptr, *h_ptr; \
-	le_ptr = (seg)->bytes; \
-	h_ptr = (char *) &lval; \
-	ssc_uint64_copy_to_le(le_ptr, h_ptr); \
-	(seg)->bytes += 8; \
-} while(0)
+static inline void ssc_segment_write_uint64(SscSegment *seg, uint64_t val)
+{
+	ssc_uint64_store_le(seg->bytes, val);
+	seg->bytes += 8;
+}
 
 //reading unsigned integers
-/**Retrives a 1-byte unsigned char to the current segment position
+/**Retrives a 1-byte unsigned char from the current segment position
  * and increments it accordingly.
- * \param seg Pointer to the segment (type SscSegment *)
- * \param lval Variable of type unsigned char to store the result
+ * \param seg Pointer to the segment
+ * \res the result
  */
-#define ssc_segment_read_uint8(seg, lval) \
-do { \
-	lval = *((seg)->bytes); \
-	(seg)->bytes += 1; \
-} while (0)
+static inline uint8_t ssc_segment_read_uint8(SscSegment *seg)
+{
+	uint8_t r = *seg->bytes;
+	seg->bytes += 1;
+	return r;
+}
 
 /**Retrives a 16-bit unsigned integer from current segment position
  * after converting to host byte order and increments it accordingly.
- * \param seg Pointer to the segment (type SscSegment *)
- * \param lval Variable of type uint16_t to store the result
+ * \param seg Pointer to the segment
+ * \res the result
  */
-#define ssc_segment_read_uint16(seg, lval) \
-do {\
-	char *le_ptr, *h_ptr; \
-	le_ptr = (seg)->bytes; \
-	h_ptr = (char *) &lval; \
-	ssc_uint16_copy_from_le(le_ptr, h_ptr); \
-	(seg)->bytes += 2; \
-} while(0)
+static inline uint16_t ssc_segment_read_uint16(SscSegment *seg)
+{
+	uint16_t r = ssc_uint16_load_le(seg->bytes);
+	seg->bytes += 2;
+	return r;
+}
 
 /**Retrives a 32-bit unsigned integer from current segment position
  * after converting to host byte order and increments it accordingly.
- * \param seg Pointer to the segment (type SscSegment *)
- * \param lval Variable of type uint32_t to store the result
+ * \param seg Pointer to the segment
+ * \res the result
  */
-#define ssc_segment_read_uint32(seg, lval) \
-do {\
-	char *le_ptr, *h_ptr; \
-	le_ptr = (seg)->bytes; \
-	h_ptr = (char *) &lval; \
-	ssc_uint32_copy_from_le(le_ptr, h_ptr); \
-	(seg)->bytes += 4; \
-} while(0)
+static inline uint32_t ssc_segment_read_uint32(SscSegment *seg)
+{
+	uint32_t r = ssc_uint32_load_le(seg->bytes);
+	seg->bytes += 4;
+	return r;
+}
 
 /**Retrives a 64-bit unsigned integer from current segment position
  * after converting to host byte order and increments it accordingly.
- * \param seg Pointer to the segment (type SscSegment *)
- * \param lval Variable of type uint64_t to store the result
+ * \param seg Pointer to the segment
+ * \res the result
  */
-#define ssc_segment_read_uint64(seg, lval) \
-do {\
-	char *le_ptr, *h_ptr; \
-	le_ptr = (seg)->bytes; \
-	h_ptr = (char *) &lval; \
-	ssc_uint64_copy_from_le(le_ptr, h_ptr); \
-	(seg)->bytes += 8; \
-} while(0)
+static inline uint64_t ssc_segment_read_uint64(SscSegment *seg)
+{
+	uint64_t r = ssc_uint64_load_le(seg->bytes);
+	seg->bytes += 8;
+	return r;
+}
 
 #ifdef SSC_INT_2_COMPLEMENT
 #define ssc_segment_write_int8 ssc_segment_write_uint8

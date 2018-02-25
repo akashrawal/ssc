@@ -218,19 +218,11 @@ int ssc_var_code_for_base_read
 			ssc_var_code_base_exp(var, prefix, c_file);
 			fprintf(c_file, "));\n");
 		}
-		else if (var->type.fid == SSC_TYPE_FUNDAMENTAL_MSG)
-		{
-			ssc_var_code_base_exp(var, prefix, c_file);
-			fprintf(c_file, " = ssc_segment_read_msg(%s);\n",
-			        segment);
-		}
 		else
 		{
-			fprintf(c_file, "ssc_segment_read_%s(%s, ",
-				ssc_type_fundamental_names[var->type.fid],
-				segment);
 			ssc_var_code_base_exp(var, prefix, c_file);
-			fprintf(c_file, ");\n");
+			fprintf(c_file, " = ssc_segment_read_%s(%s);\n",
+				ssc_type_fundamental_names[var->type.fid], segment);
 		}
 		
 	}
@@ -655,7 +647,7 @@ void ssc_var_code_for_read
 			"    {\n"
 			"        int _i;\n"
 			"        SscSegment sub_seg;\n"
-			"        ssc_segment_read_uint32(seg, %s%s.len);\n"
+			"        %s%s.len = ssc_segment_read_uint32(seg);\n"
 			"        if (ssc_msg_iter_get_segment(msg_iter, "
 			"%d * %s%s.len, %d * %s%s.len, &sub_seg) < 0)\n"
 			"            goto _ssc_fail_%s;\n",
@@ -721,7 +713,7 @@ void ssc_var_code_for_read
 			"    {\n"
 			"        SscSegment sub_seg;\n"
 			"        char presence;\n"
-			"        ssc_segment_read_uint8(seg, presence);\n"
+			"        presence = ssc_segment_read_uint8(seg);\n"
 			"        if (presence)\n"
 			"        {\n"
 			"            if (ssc_msg_iter_get_segment(msg_iter, "

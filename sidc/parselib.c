@@ -677,7 +677,7 @@ MmcStatus ssc_parser_parse_needed
 		//Parse the file
 		FILE *input;
 		yyscan_t yyscanner;
-		int res;
+		int res = 0;
 		SscFileData file_data;
 		
 		//register parsing

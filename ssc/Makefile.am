@@ -1,12 +1,9 @@
 
 lib_LTLIBRARIES = libssc.la
 
-#Generated file(s)
-generated.h: generator.sh
-	$(srcdir)/generator.sh
-	
-CLEANFILES = generated.h
-BUILT_SOURCES = generated.h
+#Generated file generated.h
+DISTCLEANFILES = generated.h
+EXTRA_DIST = generated.h.in
 
 #libssc.la
 ssc_c =  \
@@ -31,9 +28,4 @@ libssc_la_LIBADD = -lm $(MMC_LIBS)
 #Headers
 sscincludedir = $(includedir)/ssc
 sscinclude_HEADERS = $(ssc_h)                
-                        
-
 nodist_sscinclude_HEADERS = generated.h    
-
-#Distribute the generator and configuration file
-EXTRA_DIST = config.sh.in generator.sh

@@ -74,9 +74,7 @@ void ssc_segment_write_flt32(SscSegment *seg, SscValFlt val)
 
 void ssc_segment_read_flt32(SscSegment *seg, SscValFlt *val)
 {
-	uint32_t inter;
-	
-	ssc_segment_read_uint32(seg, inter);
+	uint32_t inter = ssc_segment_read_uint32(seg);
 	val->type = ssc_flt32_classify(inter);
 	val->val = ssc_double_from_flt32(inter);
 }
@@ -108,9 +106,7 @@ void ssc_segment_write_flt64(SscSegment *seg, SscValFlt val)
 
 void ssc_segment_read_flt64(SscSegment *seg, SscValFlt *val)
 {
-	uint64_t inter;
-	
-	ssc_segment_read_uint64(seg, inter);
+	uint64_t inter = ssc_segment_read_uint64(seg);
 	val->type = ssc_flt64_classify(inter);
 	val->val = ssc_double_from_flt64(inter);
 }
@@ -181,7 +177,7 @@ uint16_t ssc_get_fn_idx(MmcMsg *msg)
 	if (msg->mem_len < 2)
 		return SSC_FN_IDX_INVALID;
 	
-	ssc_uint16_copy_from_le(msg->mem, &res);
+	res = ssc_uint16_load_le(msg->mem);
 	
 	return res;
 }
