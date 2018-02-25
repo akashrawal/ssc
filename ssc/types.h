@@ -89,7 +89,6 @@ static inline uint64_t ssc_uint64_swap_le_be(uint64_t v)
 }
 
 //TODO: How to use autotools for mixed endian systems?
-//TODO: Copy documentation here
 
 /**Converts a 16-bit integer from native byte order to little endian
  * byte order and vice versa.
@@ -316,67 +315,166 @@ static inline void ssc_uint64_store_le(void *le, uint64_t v)
 #define SSC_INT_2_COMPLEMENT
 #endif
 
-#ifndef SSC_INT_2_COMPLEMENT
 /**Converts a signed char to two's complement form
  * \param val signed char to convert
  * \return two's complement form of val
  */
-unsigned char ssc_int8_to_2_complement(char val);
+static inline unsigned char ssc_int8_to_2_complement(char val)
+{
+#ifndef SSC_INT_2_COMPLEMENT
+	if (val < 0)
+	{
+		unsigned char res;
+		res = -val;   //< Take absolute value
+		res = ~ res;  //< one's complement
+		res += 1;     //< two's complement
+		return res;
+	}
+#endif
+	return (unsigned char) val;
+}
 
 /**Converts a 16-bit signed integer to two's complement form
  * \param val int16_t to convert
  * \return two's complement form of val
  */
-uint16_t ssc_int16_to_2_complement(int16_t val);
+static inline uint16_t ssc_int16_to_2_complement(int16_t val)
+{
+#ifndef SSC_INT_2_COMPLEMENT
+	if (val < 0)
+	{
+		uint16_t res;
+		res = -val;   //< Take absolute value
+		res = ~ res;  //< one's complement
+		res += 1;     //< two's complement
+		return res;
+	}
+#endif
+	return (uint16_t) val;
+}
 
 /**Converts a 32-bit signed integer to two's complement form
  * \param val int32_t to convert
  * \return two's complement form of val
  */
-uint32_t ssc_int32_to_2_complement(int32_t val);
+static inline uint32_t ssc_int32_to_2_complement(int32_t val)
+{
+#ifndef SSC_INT_2_COMPLEMENT
+	if (val < 0)
+	{
+		uint32_t res;
+		res = -val;   //< Take absolute value
+		res = ~ res;  //< one's complement
+		res += 1;     //< two's complement
+		return res;
+	}
+#endif
+	return (uint32_t) val;
+}
 
 /**Converts a 64-bit signed integer to two's complement form
  * \param val int64_t to convert
  * \return two's complement form of val
  */
-uint64_t ssc_int64_to_2_complement(int64_t val);
+static inline uint64_t ssc_int64_to_2_complement(int64_t val)
+{
+#ifndef SSC_INT_2_COMPLEMENT
+	if (val < 0)
+	{
+		uint64_t res;
+		res = -val;   //< Take absolute value
+		res = ~ res;  //< one's complement
+		res += 1;     //< two's complement
+		return res;
+	}
+#endif
+	return (uint64_t) val;
+}
 
 /**Converts a signed char in two's complement form to native form
  * \param val A two's complement representation of signed char
  * \return Native representation of val
  */
-char ssc_int8_from_2_complement(unsigned char val);
+static inline char ssc_int8_from_2_complement(unsigned char val)
+{
+#ifndef SSC_INT_2_COMPLEMENT
+	//Check for negative value
+	if (val & (1 << 7))
+	{
+		char res;
+		//Follow inverse operations
+		val -= 1;
+		val = ~val;
+		res = -val;
+		return res;
+	}
+#endif
+	return (char) val;
+}
 
 /**Converts a 16-bit integer in two's complement form to native form
  * \param val A two's complement representation of a 16-bit signed integer
  * \return Native representation of val
  */
-int16_t ssc_int16_from_2_complement(uint16_t val);
+static inline int16_t ssc_int16_from_2_complement(uint16_t val)
+{
+#ifndef SSC_INT_2_COMPLEMENT
+	//Check for negative value
+	if (val & (1 << 15))
+	{
+		int16_t res;
+		//Follow inverse operations
+		val -= 1;
+		val = ~val;
+		res = -val;
+		return res;
+	}
+#endif
+	return (int16_t) val;
+}
 
 /**Converts a 32-bit integer in two's complement form to native form
  * \param val A two's complement representation of a 32-bit signed integer
  * \return Native representation of val
  */
-int32_t ssc_int32_from_2_complement(uint32_t val);
+static inline int32_t ssc_int32_from_2_complement(uint32_t val)
+{
+#ifndef SSC_INT_2_COMPLEMENT
+	//Check for negative value
+	if (val & (1 << 31))
+	{
+		int32_t res;
+		//Follow inverse operations
+		val -= 1;
+		val = ~val;
+		res = -val;
+		return res;
+	}
+#endif
+	return (int32_t) val;
+}
 
 /**Converts a 64-bit integer in two's complement form to native form
  * \param val A two's complement representation of a 64-bit signed integer
  * \return Native representation of val
  */
-int64_t ssc_int64_from_2_complement(uint64_t val);
-
-#else
-//no-op macros for 2's complement systems
-#define ssc_int8_to_2_complement(val)    ((unsigned char) (val))
-#define ssc_int16_to_2_complement(val)   ((uint16_t)      (val))
-#define ssc_int32_to_2_complement(val)   ((uint32_t)      (val))
-#define ssc_int64_to_2_complement(val)   ((uint64_t)      (val))
-#define ssc_int8_from_2_complement(val)  ((char)          (val))
-#define ssc_int16_from_2_complement(val) ((int16_t)       (val))
-#define ssc_int32_from_2_complement(val) ((int32_t)       (val))
-#define ssc_int64_from_2_complement(val) ((int64_t)       (val))
-
+static inline int64_t ssc_int64_from_2_complement(uint64_t val)
+{
+#ifndef SSC_INT_2_COMPLEMENT
+	//Check for negative value
+	if (val & (1LL << 63))
+	{
+		int64_t res;
+		//Follow inverse operations
+		val -= 1;
+		val = ~val;
+		res = -val;
+		return res;
+	}
 #endif
+	return (int64_t) val;
+}
+
 
 //Convenience macros for signed integers
 ///Convenient macro for converting 16-bit signed integer to portable form.
