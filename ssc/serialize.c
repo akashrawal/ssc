@@ -30,20 +30,20 @@ void ssc_msg_iter_init(SscMsgIter *self, MmcMsg *msg)
 	self->submsgs_lim = self->submsgs + msg->submsgs_len;
 }
 
-int ssc_msg_iter_get_segment
+MmcStatus ssc_msg_iter_get_segment
 	(SscMsgIter *self, size_t n_bytes, size_t n_submsgs, 
 	 SscSegment *res)
 {
 	if (self->bytes + n_bytes > self->bytes_lim
 		|| self->submsgs + n_submsgs > self->submsgs_lim)
-		return -1;
+		return MMC_FAILURE;
 	
 	res->bytes = self->bytes;
 	res->submsgs = self->submsgs;
 	self->bytes += n_bytes;
 	self->submsgs += n_submsgs;
 	
-	return 0;
+	return MMC_SUCCESS;
 }
 
 //Floating point values
@@ -112,7 +112,6 @@ void ssc_segment_read_flt64(SscSegment *seg, SscValFlt *val)
 }
 
 //Strings
-//TODO: Format for strings
 void ssc_segment_write_string(SscSegment *seg, char *val)
 {
 	MmcMsg *submsg;

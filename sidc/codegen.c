@@ -649,7 +649,7 @@ void ssc_var_code_for_read
 			"        SscSegment sub_seg;\n"
 			"        %s%s.len = ssc_segment_read_uint32(seg);\n"
 			"        if (ssc_msg_iter_get_segment(msg_iter, "
-			"%d * %s%s.len, %d * %s%s.len, &sub_seg) < 0)\n"
+			"%d * %s%s.len, %d * %s%s.len, &sub_seg) == MMC_FAILURE)\n"
 			"            goto _ssc_fail_%s;\n",
 			prefix, var->name, 
 			(int) base_size.n_bytes, prefix, var->name,
@@ -717,7 +717,7 @@ void ssc_var_code_for_read
 			"        if (presence)\n"
 			"        {\n"
 			"            if (ssc_msg_iter_get_segment(msg_iter, "
-			"%d, %d, &sub_seg) < 0)\n"
+			"%d, %d, &sub_seg) == MMC_FAILURE)\n"
 			"                goto _ssc_fail_%s;\n",
 			(int) base_size.n_bytes, 
 			(int) base_size.n_submsgs, 

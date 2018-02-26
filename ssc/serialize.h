@@ -86,17 +86,14 @@ typedef struct
  */
 void ssc_msg_iter_init(SscMsgIter *self, MmcMsg *msg);
 
-//TODO: Hunt for all functions who have success/failure return 
-//      type and replace return type with MmcStatus.
-//      Following is one of them.
 /**Gets a segment from a iterator, advancing its position forward. 
  * \param self The iterator
  * \param n_bytes The number of bytes to 'read' from the byte stream
  * \param n_submsgs The number of submsgs to 'read' from the block stream
  * \param res Pointer to the resulting segment struct
- * \return 0 if the operation was successful, -1 otherwise
+ * \return an MmcStatus to state whether the operation was successful.
  */
-int ssc_msg_iter_get_segment
+MmcStatus ssc_msg_iter_get_segment
 	(SscMsgIter *self, size_t n_bytes, size_t n_submsgs, 
 	 SscSegment *res);
 

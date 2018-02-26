@@ -150,12 +150,14 @@ static void ssc_arglist_gen_code
 		"    uint8_t prefix_val;\n"
 		"    \n"
 		"    ssc_msg_iter_init(msg_iter, msg);\n"
-		"    if (ssc_msg_iter_get_segment(msg_iter, SSC_PREFIX_SIZE, 0, seg) < 0)\n"
+		"    if (ssc_msg_iter_get_segment(msg_iter, SSC_PREFIX_SIZE, 0, seg)\n"
+		"            == MMC_FAILURE)\n"
 		"        goto _ssc_return;\n"
 		"    prefix_val = ssc_segment_read_uint8(seg);\n"
 		"    if (prefix_val != %d)\n"
 		"        goto _ssc_return;\n"
-		"    if (ssc_msg_iter_get_segment(msg_iter, %d, %d, seg) < 0)\n"
+		"    if (ssc_msg_iter_get_segment(msg_iter, %d, %d, seg)\n"
+		"            == MMC_FAILURE)\n"
 		"        goto _ssc_return;\n"
 		"    \n",
 		name_prefix, args_type.df, name_prefix, args_type.sn,
