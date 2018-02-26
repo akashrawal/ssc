@@ -13,6 +13,6 @@ EXTRA_DIST = logcc.sh.in
 
 #Tests to run
 SUBDIRS = proto_int
-TESTS = proto_int/main$(EXEEXT)
+TESTS = proto_int/main$(EXEEXT) proto_int/idl.txt
 LOG_COMPILER = sh $(builddir)/logcc.sh
 

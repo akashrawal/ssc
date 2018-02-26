@@ -19,7 +19,6 @@
  */
 
 #include "incl.h"
-//TODO: Check for responses for allocation failures
 
 size_t ssc_msg_count(MmcMsg *msg)
 {
@@ -85,18 +84,6 @@ MmcMsg *ssc_msg_alloc_by_layout(size_t len, uint32_t *layout)
 	int qlim;
 	MmcMsg *res;
 
-	//What to do on fail
-#define fail(delete_lim) \
-	do { \
-		int _i; \
-		for (_i = 0; _i < (delete_lim); _i++) \
-		{ \
-			mmc_msg_unref(qdata[_i]); \
-		} \
-		free(qdata); \
-		return NULL; \
-	} while (0)
-
 	//Sanity checks
 	if (len < 1)
 		return NULL;
@@ -109,8 +96,8 @@ MmcMsg *ssc_msg_alloc_by_layout(size_t len, uint32_t *layout)
 		return NULL;
 	qlim = 1;
 
-	//Imitate the tree traversal using layout informaiton
-	//and allocate all messages
+	//Imitate tree traversal to find metadata for all nodes
+	//Allocate all messages
 	for (i = 0; i < qlim; i++)
 	{
 		size_t mem_len;
@@ -128,7 +115,7 @@ MmcMsg *ssc_msg_alloc_by_layout(size_t len, uint32_t *layout)
 		{
 			//Queue must never overflow
 			if (qlim >= len)
-				fail(i);
+				break;
 
 			int b = qlim;
 			while (ssc_uint32_from_le(layout[qlim]) & SSC_MSG_SIBLING)
@@ -138,12 +125,21 @@ MmcMsg *ssc_msg_alloc_by_layout(size_t len, uint32_t *layout)
 		}
 
 		//Create message
-		qdata[i] = mmc_msg_newa(mem_len, submsgs_len);
+		qdata[i] = mmc_msg_try_newa(mem_len, submsgs_len);
+		if (! qdata[i])
+			break;
 	}
 
-	//Check if tree traversal stopped due to queue underflow
-	if (qlim < len)
-		fail(qlim);
+	//If allocation stopped halfway, free all messages and quit
+	//Allocation can stop because of failed malloc(),
+	//or invalid tree information bits.
+	if (i < len)
+	{
+		for (j = 0; j < i; j++)
+			mmc_msg_unref(qdata[j]);
+		free(qdata);
+		return NULL;
+	}
 
 	//Assemble the tree
 	qlim = 1;
@@ -162,7 +158,6 @@ MmcMsg *ssc_msg_alloc_by_layout(size_t len, uint32_t *layout)
 	res = qdata[0];
 	free(qdata);
 	return res;
-#undef fail
 }
 
 size_t ssc_msg_get_blocks(MmcMsg *msg, size_t len, SscMBlock *data)

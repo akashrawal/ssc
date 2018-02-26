@@ -19,23 +19,32 @@
 #You should have received a copy of the GNU General Public License
 #along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
 
-top_builddir="@abs_top_builddir@"
+top_builddir="@top_builddir@"
+srcdir="@srcdir@"
+builddir="@builddir@"
+
 vg_cmd="valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all"
 vg_cmd="$vg_cmd --error-exitcode=3"
 
 testcase="$1"
+target="${testcase/$srcdir/$builddir}.test"
+
+print_exec() {
+	echo "Running command $@"
+	exec "$@"
+}
 
 run_program() {
 	if test "$VALGRIND_TESTS" = 1; then
-		exec libtool --mode=execute $vg_cmd "$@"
+		print_exec libtool --mode=execute $vg_cmd "$@"
 	else
-		exec "$@"
+		print_exec "$@"
 	fi
 }
 
-if test "${testcase##*.}" == ".txt"; then
-	#IDL test
-	run_program "$top_builddir/sidc/sidc" "$testcase"
+ext="${testcase##*.}"
+if test "$ext" == "txt"; then
+	run_program "$top_builddir/sidc/sidc" "$testcase" "${target}"
 else
 	run_program "$testcase"
 fi
