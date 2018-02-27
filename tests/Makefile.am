@@ -12,7 +12,9 @@ DISTCLEANFILES = logcc.sh
 EXTRA_DIST = logcc.sh.in
 
 #Tests to run
-SUBDIRS = proto_int
-TESTS = proto_int/main$(EXEEXT) proto_int/idl.txt
+SUBDIRS = proto_int\
+		  test_int
+TESTS = proto_int/idl.txt       proto_int/main$(EXEEXT) \
+		test_int/idl.txt        test_int/main$(EXEEXT)
 LOG_COMPILER = sh $(builddir)/logcc.sh
 

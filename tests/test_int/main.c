@@ -1,5 +1,5 @@
-/* idl.txt
- * Just a prototype for WYSIWYG feel
+/* main.c
+ * Integer test
  * 
  * Copyright 2015-2018 Akash Rawal
  * This file is part of Modular Middleware.
@@ -18,7 +18,57 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-interface TestIface
+#include <tests/libtest.h>
+#include "idl.h"
+
+TestStruct testcases[] = 
 {
-	increment(uint32 in) : (uint32 out)	;
+	{
+		0, 
+		0, 
+		0, 
+		0, 
+		0, 
+		0, 
+		0, 
+		0
+	},
+	{
+		UINT8_MAX,
+		UINT16_MAX,
+		UINT32_MAX,
+		UINT64_MAX,
+		INT8_MAX,
+		INT16_MAX,
+		INT32_MAX,
+		INT64_MAX
+	},
+	{
+		0, 
+		0, 
+		0, 
+		0, 
+		INT8_MIN,
+		INT16_MIN,
+		INT32_MIN,
+		INT64_MIN
+	}
 };
+
+int TestStruct__compare(TestStruct *a, TestStruct *b)
+{
+	return (a->t1 == b->t1)
+		&& (a->t2 == b->t2)
+		&& (a->t3 == b->t3)
+		&& (a->t4 == b->t4)
+		&& (a->t5 == b->t5)
+		&& (a->t6 == b->t6)
+		&& (a->t7 == b->t7)
+		&& (a->t8 == b->t8);
+}
+
+int main()
+{
+	test_struct_drive();
+	return 0;
+}

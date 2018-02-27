@@ -32,3 +32,32 @@ void test_caller_ctx_init(TestCallerCtx *ctx)
 	memset(ctx, 0, sizeof(TestCallerCtx));
 	ctx->parent.return_fn = test_caller_ctx_return_fn;
 }
+
+void test_struct_driver_fn(void *data, size_t stride, size_t len,
+		TestSerializeFn serialize_fn, TestDeserializeFn deserialize_fn,
+		TestCompareFn compare_fn)
+{
+	size_t i;
+	void *test_data = mmc_alloc(stride);
+	for (i = 0; i < len; i++)
+	{
+		printf("Testcase %zu\n", i);
+
+		void *cur_data = MMC_PTR_ADD(data, stride * i);
+		memset(test_data, 0, stride);
+
+		MmcMsg *msg = (*serialize_fn)(cur_data);
+		if ((*deserialize_fn)(msg, test_data) != MMC_SUCCESS)
+		{
+			printf("  Deserialize failed.\n");
+			abort();
+		}
+		mmc_msg_unref(msg);
+		if (! (*compare_fn)(cur_data, test_data))
+		{
+			printf("  Compare failed.\n");
+			abort();
+		}
+	}
+	free(test_data);
+}

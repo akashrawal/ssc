@@ -1,5 +1,5 @@
 /* idl.txt
- * Just a prototype for WYSIWYG feel
+ * Integer test
  * 
  * Copyright 2015-2018 Akash Rawal
  * This file is part of Modular Middleware.
@@ -18,7 +18,14 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-interface TestIface
+struct TestStruct
 {
-	increment(uint32 in) : (uint32 out)	;
+	uint8 t1;
+	uint16 t2;
+	uint32 t3;
+	uint64 t4;
+	int8 t5;
+	int16 t6;
+	int32 t7;
+	int64 t8;
 };
