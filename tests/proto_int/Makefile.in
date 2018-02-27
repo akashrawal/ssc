@@ -301,7 +301,7 @@ nodist_main_SOURCES = idl.c idl.h
 AM_CFLAGS = -I$(top_srcdir) $(MMC_CFLAGS)
 LDADD = ../libtest.la ../../ssc/libssc.la -lm $(MMC_LIBS) 
 EXTRA_DIST = idl.txt
-CLEANFILES = idl.c idl.h
+CLEANFILES = idl.c idl.h idl.txt.test.c idl.txt.test.h
 all: all-am
 
 .SUFFIXES:
