@@ -15,12 +15,14 @@ EXTRA_DIST = logcc.sh.in
 SUBDIRS = proto_int \
           test_int \
           test_string \
-		  test_optional
+		  test_optional \
+		  test_seq
 
 TESTS = proto_int/main$(EXEEXT) \
         test_int/idl.txt        test_int/main$(EXEEXT) \
 		test_string/idl.txt     test_string/main$(EXEEXT) \
-        test_optional/idl.txt   test_optional/main$(EXEEXT)
+        test_optional/idl.txt   test_optional/main$(EXEEXT) \
+        test_seq/idl.txt        test_seq/main$(EXEEXT)
 
 LOG_COMPILER = sh $(builddir)/logcc.sh
 
