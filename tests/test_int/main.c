@@ -55,7 +55,7 @@ TestStruct testcases[] =
 	}
 };
 
-int TestStruct__compare(TestStruct *a, TestStruct *b)
+int TestStruct__equal(TestStruct *a, TestStruct *b)
 {
 	return (a->t1 == b->t1)
 		&& (a->t2 == b->t2)

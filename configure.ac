@@ -39,6 +39,7 @@ AC_CONFIG_FILES([Makefile
 				 tests/logcc.sh
 				 tests/proto_int/Makefile
 				 tests/test_int/Makefile
+				 tests/test_string/Makefile
 				 ])
 AC_CONFIG_HEADERS([config.h ssc/generated.h])
 AC_OUTPUT

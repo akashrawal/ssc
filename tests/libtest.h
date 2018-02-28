@@ -32,19 +32,22 @@ void test_caller_ctx_init(TestCallerCtx *ctx);
 //Driver for struct-based tests
 typedef MmcMsg * (*TestSerializeFn) (void *value);
 typedef MmcStatus (*TestDeserializeFn) (MmcMsg *msg, void *value);
-typedef int (*TestCompareFn) (void *a, void *b);
+typedef int (*TestEqualFn) (void *a, void *b);
+typedef void (*TestFreeFn) (void *x);
 
 void test_struct_driver_fn(void *data, size_t stride, size_t len,
 		TestSerializeFn serialize_fn, TestDeserializeFn deserialize_fn,
-		TestCompareFn compare_fn);
+		TestEqualFn equal_fn, TestFreeFn free_fn);
 
 #define test_struct_drive() \
 	do { \
-		size_t stride = sizeof(testcases); \
-		size_t len = stride / sizeof(testcases[0]); \
+		size_t stride = sizeof(testcases[0]); \
+		size_t len = sizeof(testcases) / stride; \
 		test_struct_driver_fn(testcases, stride, len, \
 				(TestSerializeFn) TestStruct__serialize, \
 				(TestDeserializeFn) TestStruct__deserialize, \
-				(TestCompareFn) TestStruct__compare); \
+				(TestEqualFn) TestStruct__equal, \
+				(TestFreeFn) TestStruct__free \
+				); \
 	} while (0)
 
