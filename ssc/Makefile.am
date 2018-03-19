@@ -10,16 +10,20 @@ ssc_c =  \
 	types.c \
 	serialize.c \
 	interface.c \
-	msg.c
+	msg.c \
+	dict.c
 
 ssc_h =  ssc.h incl.h \
 	types.h \
 	serialize.h \
 	interface.h \
-	msg.h
+	msg.h \
+	dict.h
+
+ssc_p = private.h private.c
 	
      
-libssc_la_SOURCES = $(ssc_c) $(ssc_h)       
+libssc_la_SOURCES = $(ssc_c) $(ssc_h) $(ssc_p)
 	        
 nodist_libssc_la_SOURCES = generated.h
 libssc_la_CFLAGS = -Wall -I$(top_builddir) -I$(top_srcdir)

@@ -24,10 +24,15 @@
 
 #define ssc_error(...) mmc_context_error("SSC", __VA_ARGS__)
 #define ssc_warn(...) mmc_context_warn("SSC", __VA_ARGS__)
+#define ssc_assert(...) mmc_context_assert("SSC", __VA_ARGS__)
 
 //Include all headers
+#ifndef SSC_PUBLIC_HEADER
+#include "private.h"
+#endif
 #include "types.h"
 #include "serialize.h"
 #include "interface.h"
 #include "msg.h"
+#include "dict.h"
 

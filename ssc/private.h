@@ -1,5 +1,5 @@
-/* ssc.h
- * API header
+/* private.h
+ * Library-private stuff
  * 
  * Copyright 2015-2018 Akash Rawal
  * This file is part of Modular Middleware.
@@ -18,11 +18,7 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SSC_H_INCLUDED
-#define SSC_H_INCLUDED
-
-#define SSC_PUBLIC_HEADER
-#include "incl.h"
-#undef SSC_PUBLIC_HEADER
-
-#endif //SSC_H_INCLUDED
+//Compares two bit fields, with bit level granularity
+//Returns length of the bits matching at the beginning.
+size_t bitwise_match
+	(void *a, size_t a_bitstart, void *b, size_t b_bitstart, size_t bitlen);

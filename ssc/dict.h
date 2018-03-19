@@ -1,5 +1,5 @@
-/* ssc.h
- * API header
+/* dict.h
+ * Fast dictionary implementation
  * 
  * Copyright 2015-2018 Akash Rawal
  * This file is part of Modular Middleware.
@@ -18,11 +18,15 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SSC_H_INCLUDED
-#define SSC_H_INCLUDED
+typedef struct _SscDict SscDict;
 
-#define SSC_PUBLIC_HEADER
-#include "incl.h"
-#undef SSC_PUBLIC_HEADER
+void *ssc_dict_set
+	(SscDict *dict, const void *key, size_t key_len, void *data);
 
-#endif //SSC_H_INCLUDED
+void *ssc_dict_get
+	(SscDict *dict, const void *key, size_t key_len);
+
+SscDict *ssc_dict_new();
+
+mmc_rc_declare(SscDict, ssc_dict);
+

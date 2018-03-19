@@ -1,15 +1,23 @@
 
+#Common
+AM_CFLAGS = -I$(top_srcdir) $(MMC_CFLAGS)
+LDADD = ../ssc/libssc.la -lm $(MMC_LIBS) 
+
+
 #Test support library
 BUILT_SOURCES = libtest.la
 noinst_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = libtest.c libtest.h
-AM_CFLAGS = -I$(top_srcdir) $(MMC_CFLAGS)
-libtest_la_LIBADD = ../ssc/libssc.la -lm $(MMC_LIBS) 
+libtest_la_LIBADD = $(LDADD)
 
 #Log compiler
 nodist_check_SCRIPTS = logcc.sh
 DISTCLEANFILES = logcc.sh
 EXTRA_DIST = logcc.sh.in
+
+#Unit tests
+check_PROGRAMS = lib_private
+
 
 #Tests to run
 SUBDIRS = proto_int \
@@ -19,7 +27,8 @@ SUBDIRS = proto_int \
 		  test_seq \
 		  test_optional_ptr
 
-TESTS = proto_int/main$(EXEEXT) \
+TESTS = $(check_PROGRAMS) \
+        proto_int/main$(EXEEXT) \
         test_int/idl.txt            test_int/main$(EXEEXT) \
 		test_string/idl.txt         test_string/main$(EXEEXT) \
         test_optional/idl.txt       test_optional/main$(EXEEXT) \
