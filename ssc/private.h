@@ -18,7 +18,3 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//Compares two bit fields, with bit level granularity
-//Returns length of the bits matching at the beginning.
-size_t bitwise_match
-	(void *a, size_t a_bitstart, void *b, size_t b_bitstart, size_t bitlen);
