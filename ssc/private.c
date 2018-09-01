@@ -21,7 +21,7 @@
 #include "incl.h"
 
 
-static inline int avl_do_hbf(MiniAvlTreeNode *mem, int x)
+static inline int avl_do_hbf(SscMiniAvlNode *mem, int x)
 {
 	int l = mem[x].left;
 	int lh = l ? mem[l].height : 0;
@@ -32,7 +32,7 @@ static inline int avl_do_hbf(MiniAvlTreeNode *mem, int x)
 	return rh - lh;
 }
 
-static inline int avl_rotate_l(MiniAvlTreeNode *mem, int x)
+static inline int avl_rotate_l(SscMiniAvlNode *mem, int x)
 {
 	int r = mem[x].right;
 	int b = mem[r].left;
@@ -46,7 +46,7 @@ static inline int avl_rotate_l(MiniAvlTreeNode *mem, int x)
 	return r;
 }
 
-static inline int avl_rotate_r(MiniAvlTreeNode *mem, int x)
+static inline int avl_rotate_r(SscMiniAvlNode *mem, int x)
 {
 	int r = mem[x].left;
 	int b = mem[r].right;
@@ -60,7 +60,7 @@ static inline int avl_rotate_r(MiniAvlTreeNode *mem, int x)
 	return r;
 }
 
-static inline int avl_balance1(MiniAvlTreeNode *mem, int x)
+static inline int avl_balance1(SscMiniAvlNode *mem, int x)
 {
 	int bf = avl_do_hbf(mem, x);
 
@@ -80,7 +80,7 @@ static inline int avl_balance1(MiniAvlTreeNode *mem, int x)
 	return x;
 }
 
-int ssc_mini_avl_set_rec(MiniAvlTreeNode *mem, int x, int key, int *tray)
+int ssc_mini_avl_set_rec(SscMiniAvlNode *mem, int x, int key, int *tray)
 {
 	if (!x)
 	{
@@ -108,7 +108,7 @@ int ssc_mini_avl_set_rec(MiniAvlTreeNode *mem, int x, int key, int *tray)
 	return x;
 }
 
-static int avl_remove_min(MiniAvlTreeNode *mem, int x, int *tray)
+static int avl_remove_min(SscMiniAvlNode *mem, int x, int *tray)
 {
 	if (mem[x].left)
 	{
@@ -122,7 +122,7 @@ static int avl_remove_min(MiniAvlTreeNode *mem, int x, int *tray)
 	}
 }
 
-int ssc_mini_avl_unset_rec(MiniAvlTreeNode *mem, int x, int key, int *tray)
+int ssc_mini_avl_unset_rec(SscMiniAvlNode *mem, int x, int key, int *tray)
 {
 	if (!x)
 	{
@@ -168,6 +168,6 @@ typedef struct \
 { \
 	uint8_t lim, freelist; \
 	uint8_t htable[size]; \
-	MiniAvlTreeNode avl_nodes[size]; \
+	SscMiniAvlNode avl_nodes[size]; \
 } SizedMap ## size; \
 

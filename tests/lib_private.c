@@ -32,7 +32,7 @@
 		} \
 	} while (0)
 
-static int avl_tree_check_sanity(MiniAvlTreeNode *mem, int x, int l, int r)
+static int avl_tree_check_sanity(SscMiniAvlNode *mem, int x, int l, int r)
 {
 	if (!x)
 		return 0;
@@ -62,7 +62,7 @@ static int avl_tree_check_sanity(MiniAvlTreeNode *mem, int x, int l, int r)
 }
 
 static int avl_tree_check_correctness
-	(MiniAvlTreeNode *mem, int root, int *elements)
+	(SscMiniAvlNode *mem, int root, int *elements)
 {
 	avl_tree_check_sanity(mem, root, -1, 256);
 
@@ -97,7 +97,7 @@ static int avl_tree_check_correctness
 static int avl_tree_test(int op, ...)
 {
 	static int elements[256];
-	static MiniAvlTreeNode mem[257];
+	static SscMiniAvlNode mem[257];
 	int i;
 	int freelist = 1;;
 

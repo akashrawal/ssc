@@ -22,11 +22,11 @@
 typedef struct
 {
 	uint8_t key, left, right, height;
-} MiniAvlTreeNode;
+} SscMiniAvlNode;
 
-int ssc_mini_avl_set_rec(MiniAvlTreeNode *mem, int x, int key, int *tray);
+int ssc_mini_avl_set_rec(SscMiniAvlNode *mem, int x, int key, int *tray);
 
-int ssc_mini_avl_unset_rec(MiniAvlTreeNode *mem, int x, int key, int *tray);
+int ssc_mini_avl_unset_rec(SscMiniAvlNode *mem, int x, int key, int *tray);
 
 //A space efficient map that maps a byte to a pointer
 typedef struct
