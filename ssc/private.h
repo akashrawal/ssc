@@ -18,3 +18,25 @@
  * along with Modular Middleware.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+//A small AVL tree for handling collisions in small hash tables
+typedef struct
+{
+	uint8_t key, left, right, height;
+} MiniAvlTreeNode;
+
+int ssc_mini_avl_set_rec(MiniAvlTreeNode *mem, int x, int key, int *tray);
+
+int ssc_mini_avl_unset_rec(MiniAvlTreeNode *mem, int x, int key, int *tray);
+
+//A space efficient map that maps a byte to a pointer
+typedef struct
+{
+	void *ptr;
+	uint16_t metainf;
+} SscByteMap;
+
+void ssc_byte_map_init(SscByteMap *m);
+
+void ssc_byte_map_set(SscByteMap *m, uint8_t key, void *value);
+
+void *ssc_byte_map_get(SscByteMap *s, uint8_t key);
