@@ -116,8 +116,6 @@ static int avl_tree_test(int op, ...)
 	{
 		int arg = va_arg(arglist, int);
 
-		ssc_warn("TMP: Doing (%d, %d)", op, arg);
-
 		if (op == INSERT)
 		{
 			int alloc = freelist;
@@ -170,12 +168,25 @@ static int avl_tree_test(int op, ...)
 	return 1;
 }
 
+#define avl_l1(op, base) op, (base), op, ((base) + 1)
+#define avl_l2(op, base) avl_l1(op, base), avl_l1(op, (base) + 2)
+#define avl_l3(op, base) avl_l2(op, base), avl_l2(op, (base) + 4)
+#define avl_l4(op, base) avl_l3(op, base), avl_l3(op, (base) + 8)
+#define avl_l5(op, base) avl_l4(op, base), avl_l4(op, (base) + 16)
+#define avl_l6(op, base) avl_l5(op, base), avl_l5(op, (base) + 32)
+#define avl_l7(op, base) avl_l6(op, base), avl_l6(op, (base) + 64)
+
+
 int main()
 {
 	run_test(avl_tree_test(INSERT, 0, INSERT, 1, INSERT, 2,
 				REMOVE, 1, REMOVE, 2, REMOVE, 0, STOP));	
 	run_test(avl_tree_test(REMOVE, 0, INSERT, 0, INSERT, 0,
 				REMOVE, 0, REMOVE, 0, STOP));
+	run_test(avl_tree_test(REMOVE, 255, INSERT, 255, INSERT, 255,
+				REMOVE, 255, REMOVE, 255, STOP));
+	run_test(avl_tree_test(avl_l7(INSERT, 0), avl_l7(INSERT, 128), 
+				avl_l7(REMOVE, 0), avl_l7(REMOVE, 128), STOP));
 	
 	return 0;
 }
