@@ -160,14 +160,367 @@ int ssc_mini_avl_unset_rec(SscMiniAvlNode *mem, int x, int key, int *tray)
 
 
 
-//We use hash + AVL trees for sizes: 4, 8, 16, 32, 64.
+//We use hash table + AVL trees for sizes: 5, 11, 23, 59
 //We use DIT for size 256.
 
-#define SIZED_MAP(size) \
-typedef struct \
-{ \
-	uint8_t lim, freelist; \
-	uint8_t htable[size]; \
-	SscMiniAvlNode avl_nodes[size]; \
-} SizedMap ## size; \
+typedef struct
+{
+	uint8_t freelist;
+} SizedMap;
+
+typedef struct
+{
+	void **values;
+	uint8_t *htable;
+	SscMiniAvlNode *avl_nodes;
+} SizedMapExt;
+
+static inline size_t align_offset(size_t x)
+{
+	size_t ap = sizeof(void *) * 2; //< This is debated
+	if (x % ap)
+		x += ap - (x % ap);
+	return x;
+}
+
+static inline SizedMap *sized_map_ext
+	(int size, SizedMap *ds, SizedMapExt *dse)
+{
+	size_t values_offset = align_offset(sizeof(SizedMap));
+	size_t htable_offset = align_offset(values_offset + sizeof(void *) * size);
+	size_t avl_nodes_offset = align_offset(htable_offset + size);
+	size_t alloc_size = avl_nodes_offset + sizeof(SscMiniAvlNode) * size;
+
+	char *mem;
+	if (!ds)
+		ds = mmc_alloc(alloc_size);
+	mem = (char *) ds;
+
+	dse->values = (void **) (mem + values_offset);
+	dse->htable = (uint8_t *) (mem + htable_offset);
+	dse->avl_nodes = (SscMiniAvlNode *) (mem + avl_nodes_offset);
+
+	return ds;
+}
+
+static SizedMap *sized_map_new(size_t size)
+{
+	SizedMap *ds;
+	SizedMapExt dse;
+
+	ds = sized_map_ext(size, NULL, &dse);
+
+	int i;
+	for (i = 0; i < size; i++)
+	{
+		dse.htable[i] = 0;
+		dse.avl_nodes[i].key = i + 2;
+		dse.values[i] = NULL;
+	}
+	dse.avl_nodes[size - 1].key = 0;
+	ds->freelist = 1;
+	return ds;
+}
+
+static int sized_map_insert(size_t size, SizedMap *ds, int key, void *value) 
+{ 
+	SizedMapExt dse;
+	sized_map_ext(size, ds, &dse);
+
+	int alloc, tray; 
+	alloc = ds->freelist; 
+	if (!alloc) 
+		return -1; 
+	ds->freelist = dse.avl_nodes[ds->freelist - 1].key; 
+	tray = alloc; 
+	dse.htable[key % size] = ssc_mini_avl_set_rec 
+		(dse.avl_nodes - 1, dse.htable[key % size], key, &tray); 
+	if (tray) 
+	{ 
+		dse.avl_nodes[alloc - 1].key = ds->freelist; 
+		ds->freelist = alloc; 
+		alloc = tray; 
+	} 
+	dse.values[alloc - 1] = value; 
+	return tray ? 0 : 1; 
+} 
+
+static int sized_map_delete(size_t size, SizedMap *ds, int key) 
+{ 
+	SizedMapExt dse;
+	sized_map_ext(size, ds, &dse);
+
+	int tray = 0; 
+	dse.htable[key % size] = ssc_mini_avl_unset_rec 
+		(dse.avl_nodes - 1, dse.htable[key % size], key, &tray); 
+	if (tray) 
+	{ 
+		dse.avl_nodes[tray - 1].key = ds->freelist; 
+		ds->freelist = tray; 
+		dse.values[tray - 1] = NULL; 
+		return 1; 
+	} 
+	else 
+	{ 
+		return 0; 
+	} 
+} 
+
+static void *sized_map_get(size_t size, SizedMap *ds, int key) 
+{
+	SizedMapExt dse;
+	sized_map_ext(size, ds, &dse);
+
+	int idx = dse.htable[key % size];
+	while (idx)
+	{
+		if (key < dse.avl_nodes[idx - 1].key)
+			idx = dse.avl_nodes[idx - 1].left;
+		else if (key > dse.avl_nodes[idx - 1].key)
+			idx = dse.avl_nodes[idx - 1].right;
+		else
+			return dse.values[idx - 1];
+	}
+	return NULL;
+}
+
+static void sized_map_transfer
+	(size_t size, SizedMap *ds, size_t nsize, SizedMap *nds)
+{
+	SizedMapExt dse;
+	sized_map_ext(size, ds, &dse);
+	int i;
+	for (i = 0; i < size; i++)
+	{
+		if (dse.values[i])
+		{
+			int key = dse.avl_nodes[i].key;
+			void *value = dse.values[i];
+			sized_map_insert(nsize, nds, key, value);
+		}
+	}
+}
+
+void sized_map_to_dit(size_t size, SizedMap *ds, void **dit)
+{
+	SizedMapExt dse;
+	sized_map_ext(size, ds, &dse);
+	int i; 
+	for (i = 0; i < 256; i++)
+	{
+		dit[i] = NULL;
+	}
+	for (i = 0; i < size; i++)
+	{
+		if (dse.values[i])
+			dit[dse.avl_nodes[i].key] = dse.values[i];
+	}
+}
+
+void sized_map_from_dit(size_t size, SizedMap *ds, void **dit)
+{
+	int i; 
+	for (i = 0; i < 256; i++)
+	{
+		if (dit[i])
+			sized_map_insert(size, ds, i, dit[i]);
+	}
+}
+
+
+static const int mode_table[] = {0, 0, 5, 11, 23, 59, 256, -1};
+
+void ssc_byte_map_init(SscByteMap *m)
+{
+	m->ptr = NULL;
+	m->metainf = 0;
+}
+
+void ssc_byte_map_set(SscByteMap *m, uint8_t key, void *value)
+{
+	int mode = m->metainf % 16;
+	int sec = m->metainf / 16;
+
+	int asize = mode_table[mode];
+
+	if (value)
+	{
+		if (mode == 0)
+		{
+			mode = 1;
+			sec = key;
+			m->ptr = value;
+		}
+		else if (mode == 1)
+		{
+			if (sec == key)
+			{
+				m->ptr = value;
+			}
+			else
+			{
+				int nasize = mode_table[mode + 1];
+				void *value0 = m->ptr;
+				m->ptr = sized_map_new(nasize);
+				SizedMap *ds = (SizedMap *) m->ptr;
+				sized_map_insert(nasize, ds, sec, value0);
+				sized_map_insert(nasize, ds, key, value);
+				sec = 2;
+				mode = 2;
+			}
+		}
+		else if (asize == 256)
+		{
+			void **dit = (void **) m->ptr;
+			if (!dit[key])
+				sec++;
+			dit[key] = value;
+		}
+		else
+		{
+			SizedMap *ds = m->ptr;
+			int res = sized_map_insert(asize, ds, key, value);
+			if (res == 1)
+			{
+				sec++;
+			}
+			else if (res == -1)
+			{
+				int nasize = mode_table[mode + 1];
+				if (nasize == 256)
+				{
+					void **dit = malloc(sizeof(void *) * 256);
+					sized_map_to_dit(asize, ds, dit);
+					free(ds);
+					m->ptr = dit;
+					dit[key] = value;
+				}
+				else
+				{
+					SizedMap *nds = sized_map_new(nasize);
+					sized_map_transfer(asize, ds, nasize, nds);
+					free(ds);
+					m->ptr = nds;
+					sized_map_insert(nasize, nds, key, value);
+				}
+				mode++;
+				sec++;
+			}
+		}
+	}
+	else
+	{
+		if (mode == 0)
+		{
+			//Nothing to delete?
+		}
+		else if (mode == 1)
+		{
+			if (sec == key)
+			{
+				m->ptr = NULL;
+				mode = 0;
+				sec = 0;
+			}
+		}
+		else if (asize == 256)
+		{
+			void **dit = (void **) m->ptr;
+			if (dit[key])
+			{
+				int nasize = mode_table[mode - 2];
+				sec--;
+				dit[key] = NULL;
+				if (sec <= nasize)
+				{
+					SizedMap *nds = sized_map_new(nasize);
+					sized_map_from_dit(nasize, nds, dit);
+					free(dit);
+					m->ptr = nds;
+					mode -= 2;
+				}
+			}
+		}
+		else
+		{
+			SizedMap *ds = m->ptr;
+			int res = sized_map_delete(asize, ds, key);
+			if (res == 1)
+			{
+				int nasize = mode_table[mode - 2];
+				sec--;
+				if (sec <= nasize)
+				{
+					if (nasize == 0)
+					{
+						mode = 0;
+						sec = 0;
+						free(ds);
+						m->ptr = NULL;
+					}
+					else
+					{
+						SizedMap *nds = sized_map_new(nasize);
+						sized_map_transfer(asize, ds, nasize, nds);
+						free(ds);
+						m->ptr = nds;
+						mode -= 2;
+					}
+				}
+			}
+		}
+	}
+
+	m->metainf = mode | sec * 16;
+}
+
+void *ssc_byte_map_get(SscByteMap *m, uint8_t key)
+{
+	int mode = m->metainf % 16;
+	int sec = m->metainf / 16;
+	int asize = mode_table[mode];
+
+	if (mode == 0)
+	{
+		return NULL;
+	}
+	else if (mode == 1)
+	{
+		if (sec == key)
+			return m->ptr;
+		return NULL;
+	}
+	else if (asize == 256)
+	{
+		void **dit = (void **) m->ptr;
+		return dit[key];
+	}
+	else
+	{
+		SizedMap *ds = m->ptr;
+
+		return sized_map_get(asize, ds, key);
+	}
+}
+
+int ssc_byte_map_get_size(SscByteMap *m)
+{
+	int mode = m->metainf % 16;
+	int sec = m->metainf / 16;
+	if (mode >= 2)
+		return sec;
+	else
+		return mode;
+}
+
+void ssc_byte_map_clear(SscByteMap *m)
+{
+	int mode = m->metainf % 16;
+	if (mode >= 2)
+	{
+		if (m->ptr)
+			free(m->ptr);
+	}
+}
+
 

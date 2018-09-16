@@ -177,6 +177,50 @@ static int avl_tree_test(int op, ...)
 #define avl_l7(op, base) avl_l6(op, base), avl_l6(op, (base) + 64)
 
 
+int byte_map_test(int start, int len, int stride)
+{
+	void *cdata[256];
+	uint8_t targets[256];
+	int i, j, k;
+	for (i = 0; i < 256; i++)
+	{
+		targets[i] = i;
+		cdata[i] = NULL;
+	}
+
+	SscByteMap m[1];
+	ssc_byte_map_init(m);
+
+	for (k = 0; k < 2; k++)
+	{
+		for (i = 0; i < len; i++)
+		{
+			int onekey = (start + i * stride) % 256;
+			void *oneval = k ? NULL : targets + onekey;
+
+			ssc_byte_map_set(m, onekey, oneval);
+			cdata[onekey] = oneval;
+
+			for (j = 0; j < 256; j++)
+			{
+				void *val = ssc_byte_map_get(m, j);
+				void *cval = cdata[j];
+				if (val != cval)
+				{
+					ssc_error("Inconsistent values "
+						"(k = %d, onekey = %d, j = %d, val = %p, cval = %p)", 
+						k, onekey, j, val, cval);
+				}
+			}
+		}
+	}
+
+	ssc_byte_map_clear(m);
+
+	return 1;
+}
+
+
 int main()
 {
 	run_test(avl_tree_test(INSERT, 0, INSERT, 1, INSERT, 2,
@@ -187,6 +231,17 @@ int main()
 				REMOVE, 255, REMOVE, 255, STOP));
 	run_test(avl_tree_test(avl_l7(INSERT, 0), avl_l7(INSERT, 128), 
 				avl_l7(REMOVE, 0), avl_l7(REMOVE, 128), STOP));
+
+	run_test(byte_map_test(0, 2, 1));
+	run_test(byte_map_test(0, 256, 1));
+	run_test(byte_map_test(0, 5, 5));
+	run_test(byte_map_test(0, 5, 11));
+	run_test(byte_map_test(0, 5, 23));
+	run_test(byte_map_test(0, 5, 59));
+	run_test(byte_map_test(0, 50, 5));
+	run_test(byte_map_test(0, 50, 11));
+	run_test(byte_map_test(0, 50, 23));
+	run_test(byte_map_test(0, 50, 59));
 	
 	return 0;
 }
