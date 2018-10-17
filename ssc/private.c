@@ -327,6 +327,23 @@ void sized_map_from_dit(size_t size, SizedMap *ds, void **dit)
 	}
 }
 
+int sized_map_get_tuples
+	(size_t size, SizedMap *ds, uint8_t *keys, void **values)
+{
+	SizedMapExt dse;
+	sized_map_ext(size, ds, &dse);
+	int i, j;
+	for (i = 0; i < size; i++)
+	{
+		if (dse.values[i])
+		{
+			keys[j] = dse.avl_nodes[i].key;
+			values[j] = dse.values[i];
+			j++;
+		}
+	}
+	return j;
+}
 
 static const int mode_table[] = {0, 0, 5, 11, 23, 59, 256, -1};
 
@@ -503,16 +520,6 @@ void *ssc_byte_map_get(SscByteMap *m, uint8_t key)
 	}
 }
 
-int ssc_byte_map_get_size(SscByteMap *m)
-{
-	int mode = m->metainf % 16;
-	int sec = m->metainf / 16;
-	if (mode >= 2)
-		return sec;
-	else
-		return mode;
-}
-
 void ssc_byte_map_clear(SscByteMap *m)
 {
 	int mode = m->metainf % 16;
@@ -523,4 +530,53 @@ void ssc_byte_map_clear(SscByteMap *m)
 	}
 }
 
+int ssc_byte_map_get_size(SscByteMap *m)
+{
+	int mode = m->metainf % 16;
+	int sec = m->metainf / 16;
+	if (mode >= 2)
+		return sec;
+	else
+		return mode;
+}
 
+int ssc_byte_map_get_tuples(SscByteMap *m, uint8_t *keys, void **values)
+{
+	int mode = m->metainf % 16;
+	int sec = m->metainf / 16;
+	int asize = mode_table[mode];
+
+	if (mode == 0)
+	{
+		return 0;
+	}
+	else if (mode == 1)
+	{
+		keys[0] = sec;
+		values[0] = m->ptr;
+		return 1;
+	}
+	else if (asize == 256)
+	{
+		void **dit = (void **) m->ptr;
+		int i, j;
+		j = 0;
+		for (i = 0; i < 256; i++)
+		{
+			if (dit[i])
+			{
+				keys[j] = i;
+				values[j] = dit[i];
+			}
+		}
+
+		ssc_assert(j == sec, "Assertion failure");
+
+		return j;
+	}
+	else
+	{
+		SizedMap *ds = m->ptr;
+		return sized_map_get_tuples(asize, ds, keys, values);
+	}
+}

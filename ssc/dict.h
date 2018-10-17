@@ -21,7 +21,7 @@
 typedef struct _SscDict SscDict;
 
 void *ssc_dict_set
-	(SscDict *dict, const void *key, size_t key_len, void *data);
+	(SscDict *dict, const void *key, size_t key_len, void *value);
 
 void *ssc_dict_get
 	(SscDict *dict, const void *key, size_t key_len);

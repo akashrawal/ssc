@@ -44,3 +44,5 @@ void *ssc_byte_map_get(SscByteMap *m, uint8_t key);
 void ssc_byte_map_clear(SscByteMap *m);
 
 int ssc_byte_map_get_size(SscByteMap *m);
+
+int ssc_byte_map_get_tuples(SscByteMap *m, uint8_t *keys, void **values);

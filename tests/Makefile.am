@@ -16,7 +16,7 @@ DISTCLEANFILES = logcc.sh
 EXTRA_DIST = logcc.sh.in
 
 #Unit tests
-check_PROGRAMS = lib_private
+check_PROGRAMS = lib_private lib_dict
 
 
 #Tests to run
