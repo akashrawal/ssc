@@ -36,10 +36,10 @@ struct _SscDict
 	DictNode *root;
 };
 
-
 mmc_rc_define(SscDict, ssc_dict);
 
 mmc_declare_array(DictNode *, DictNodeArray, dict_node_array);
+
 
 static DictNode *alloc_node(const uint8_t *ekey, size_t len)
 {
@@ -71,7 +71,8 @@ static DictNode *create_node
 	{
 		int i;
 		int remains = key_len - ekey_offset;
-		if (target->len >= remains)
+		int run_len = target->len;
+		if (run_len >= remains)
 		{
 			for (i = 0; i < remains; i++)
 			{
@@ -81,21 +82,21 @@ static DictNode *create_node
 		}
 		else
 		{
-			for (i = 0; i < target->len; i++)
+			for (i = 0; i < run_len; i++)
 			{
 				if (target->ekey[i] != ekey[ekey_offset + i])
 					break;
 			}
-			if (i == target->len)
+			if (i == run_len)
 			{
 				DictNode *next = ssc_byte_map_get
-					(&(target->next), ekey[target->len]);
+					(&(target->next), ekey[run_len]);
 				if (next)
 				{
 					target_ptr_node = target;
-					target_ptr_chr = ekey[target->len];
+					target_ptr_chr = ekey[run_len];
 					target = next;
-					ekey_offset += target->len + 1;
+					ekey_offset += run_len + 1;
 					continue;
 				}
 			}
@@ -169,19 +170,188 @@ static DictNode *create_node
 	return res;
 }
 
+static void *collect_node(SscDict *dict, const void *key, size_t key_len)
+{
+	const uint8_t *ekey = (const uint8_t *) key;
+	const uint8_t *lkey = ekey + key_len;
+	void *res = NULL;
+	DictNodeArray array[1];
+	dict_node_array_init(array);
+
+	DictNode *iter = dict->root;
+
+	//Find the node and set the value
+	while (iter)
+	{
+		int remains = lkey - ekey;
+		int run_len = iter->len;
+		if (remains < run_len)
+		{
+			goto end;
+		}
+
+		int i;
+		for (i = 0; i < run_len; i++)
+		{
+			if (ekey[i] != iter->ekey[i])
+				goto end;
+		}
+
+		dict_node_array_append(array, iter);
+		if (remains == run_len)
+		{
+			res = iter->value;
+			iter->value = NULL;
+			break;
+		}
+		else
+		{
+			iter = ssc_byte_map_get(&(iter->next), ekey[run_len]);
+			ekey += run_len + 1;
+		}
+	}
+
+	int array_size = dict_node_array_size(array);
+	while (iter)
+	{
+		DictNode *ptr_node;
+		uint8_t ptr_chr;
+		if (array_size > 1)
+		{
+			ptr_node = array->data[array_size - 2];
+			ptr_chr = ekey[key_len - iter->len - 1];
+		}
+		else
+		{
+			ptr_node = NULL;
+			ptr_chr = 0;
+		}
+
+
+		//Coalesc forwards if possible
+		do 
+		{
+			//Check if coalescing can be done
+			if (iter->value)
+				break;
+
+			if (ssc_byte_map_get_size(&(iter->next)) != 1)
+				break;
+
+			uint8_t chr;
+			DictNode *next;
+			ssc_byte_map_get_tuples(&(iter->next), &chr, (void **) &next);
+
+			int buf_len = iter->len + 1 + next->len;
+			if (buf_len > MAX_NODE_LEN)
+				break;
+
+			//Do the coalescing
+			uint8_t buf[MAX_NODE_LEN];
+
+			memcpy(buf, iter->ekey, iter->len);
+			buf[iter->len] = chr;
+			memcpy(buf + iter->len + 1, next->ekey, next->len);
+
+			DictNode *nn = alloc_node(buf, buf_len);
+			nn->next = next->next;
+			nn->value = next->value;
+
+			//Amend the structure to replace the old nodes
+			if (ptr_node)
+				ssc_byte_map_set(&(ptr_node->next), ptr_chr, nn);
+			else
+				dict->root = nn;
+
+			ssc_byte_map_clear(&(iter->next));
+			free(iter);
+			free(next);
+			iter = nn;
+			array->data[array_size - 1] = nn;
+
+		} while(0);
+
+		//Check if this node should be freed
+		if ((iter->value) || ssc_byte_map_get_size(&(iter->next)) != 0)
+			break;
+
+		//Remove useless node	
+		ssc_byte_map_clear(&(iter->next));
+		free(iter);
+
+		//Correct data structures
+		if (ptr_node)
+			ssc_byte_map_set(&(ptr_node->next), ptr_chr, NULL);
+		else
+			dict->root = NULL;
+
+		array_size--; 
+		if (array_size == 0)
+			break;
+		iter = array->data[array_size - 1];
+	}
+
+
+end:
+	free(array->data);
+	return res;
+}
 
 void *ssc_dict_set
 	(SscDict *dict, const void *key, size_t key_len, void *value)
 {
 	//TODO: deletion
 
-	DictNode *node = create_node(dict, key, key_len);
-	void *old_value = node->value;
-	node->value = value;
-	return old_value;
+	if (value)
+	{
+		DictNode *node = create_node(dict, key, key_len);
+		void *old_value = node->value;
+		node->value = value;
+		return old_value;
+	}
+	else
+	{
+		return collect_node(dict, key, key_len);
+	}
 }
 
+void *ssc_dict_get
+	(SscDict *dict, const void *key, size_t key_len)
+{
+	const uint8_t *ekey = (const uint8_t *) key;
+	const uint8_t *lkey = ekey + key_len;
 
+	DictNode *iter = dict->root;
+
+	while (iter)
+	{
+		int remains = lkey - ekey;
+		int run_len = iter->len;
+		if (remains < run_len)
+		{
+			return NULL;
+		}
+
+		int i;
+		for (i = 0; i < run_len; i++)
+		{
+			if (ekey[i] != iter->ekey[i])
+				return NULL;
+		}
+
+		if (remains == run_len)
+		{
+			return iter->value;
+		}
+		else
+		{
+			iter = ssc_byte_map_get(&(iter->next), ekey[run_len]);
+			ekey += run_len + 1;
+		}
+	}
+
+	return NULL;
+}
 
 static void ssc_dict_destroy(SscDict *dict)
 {
@@ -204,9 +374,13 @@ static void ssc_dict_destroy(SscDict *dict)
 		int i;
 		for (i = 0; i < n_tuples; i++)
 			dict_node_array_append(stack, values[i]);
+
+		ssc_byte_map_clear(&(node->next));
+		free(node);
 	}
 
 	free(stack->data);
+	free(dict);
 }
 
 SscDict *ssc_dict_new()
@@ -220,4 +394,39 @@ SscDict *ssc_dict_new()
 	return dict;
 }
 
+static void ssc_dict_dump_rec(DictNode *node, int level)
+{
+	int i, j;
+	fprintf(stderr, "<%d|", node->len);
+	for (i = 0; i < node->len; i++)
+		fprintf(stderr, "%c", node->ekey[i]);
+	fprintf(stderr, "|%p|%p>\n", node, node->value);
+
+	uint8_t keys[256];
+	DictNode *values[256];
+	int n_tuples = ssc_byte_map_get_tuples
+		(&(node->next), keys, (void **) values);
+
+	for (i = 0; i < n_tuples; i++)
+	{
+		for (j = 0; j <= level; j++)
+			fprintf(stderr, "  ");
+		fprintf(stderr, "[%c]", keys[i]);
+		ssc_dict_dump_rec(values[i], level + 1);
+	}
+}
+
+void ssc_dict_dump(SscDict *dict)
+{
+	if (dict->root)
+	{
+		ssc_debug("Dumping tree %p", dict);
+		fprintf(stderr, "[#]");
+		ssc_dict_dump_rec(dict->root, 0);
+	}
+	else
+	{
+		ssc_debug("Tree %p is empty", dict);
+	}
+}
 

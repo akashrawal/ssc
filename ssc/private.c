@@ -327,12 +327,15 @@ void sized_map_from_dit(size_t size, SizedMap *ds, void **dit)
 	}
 }
 
+//TODO: Make functions static
+
 int sized_map_get_tuples
 	(size_t size, SizedMap *ds, uint8_t *keys, void **values)
 {
 	SizedMapExt dse;
 	sized_map_ext(size, ds, &dse);
 	int i, j;
+	j = 0;
 	for (i = 0; i < size; i++)
 	{
 		if (dse.values[i])

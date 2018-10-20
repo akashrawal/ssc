@@ -43,8 +43,8 @@ static inline void array_swap(int *arr, int i, int j)
 typedef struct 
 {
 	int n, i;
-	int states[64];
-	int elements[64];
+	int states[16];
+	int elements[16];
 } Permutator;
 
 void permutator_init(Permutator *p, int n)
@@ -99,7 +99,7 @@ int test_permutator(int n)
 	permutator_init(p, n);
 
 	i = 0;
-	int mask[64];
+	int mask[16];
 	while (permutator_next(p))
 	{
 		ssc_assert((i/n) < n_elements, "Overflow");
@@ -152,70 +152,89 @@ int test_permutator(int n)
 }
 
 
-#if 0
-static char* test_strings[] = 
+static char* test_strings_1[] = 
 {
 	"",
 	"aaaa",
-	"bbbb"
+	"bbbb",
+	NULL
 };
 
-int test_dict_insert()
+static char* test_strings_2[] = 
 {
-	int ordering[64];
-	int states[64];
+	"aaa",
+	"aab",
+	"abb",
+	"bbb",
+	NULL
+};
 
-	int n_strings = sizeof(test_strings) / sizeof(char *);
-	int i, j;
+static char* test_strings_3[] = 
+{
+	"aaaa",
+	"aabb",
+	"bbaa",
+	"bbbb",
+	NULL
+};
 
-	for (i = 0; i < n_strings; i++)
-		ordering[i] = i;
+static char* test_strings_4[] = 
+{
+	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+	"aaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbb",
+	"bbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaa",
+	"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+	NULL
+};
 
-	states[0] = -1;	
-	i = 0;
-	while (i >= 0)
+int test_dict_insert(char** strings)
+{
+	Permutator p[1];
+
+	int n_strings;
+	for (n_strings = 0; strings[n_strings]; n_strings++)
+		;
+
+	permutator_init(p, n_strings);
+
+	while (permutator_next(p))
 	{
-		int lim = n_strings - i;	
-		states[i]++;
-		
-		if (states[i] < lim)
+		SscDict *dict = ssc_dict_new();
+
+		int i, j;
+		for (i = 0; i < n_strings; i++)
 		{
-			i++;
-			states[i] = -1;
+			char *key = strings[p->elements[i]];
+			ssc_dict_set(dict, key, strlen(key), key);
+
+			for (j = 0; j <= i; j++)
+			{
+				char *ckey = strings[p->elements[j]];
+				char *cckey = ssc_dict_get(dict, ckey, strlen(ckey));
+				ssc_assert(ckey == cckey,
+						"Wrong answer, j = %d, ckey=%s, cckey=%p",
+						j, ckey, cckey);
+			}
 		}
-		else
-		{
-			i--;
-			continue;
-		}
 
-		int target = i + states[i - 1];
-		int tmp = ordering[i - 1];
-		ordering[i - 1] = ordering[target];
-		ordering[target] = tmp;
-
-		printf("Selection: ");
-		for (j = 0; j < i; j++)
-		{
-			printf("%d ", ordering[j]);
-		} 
-
-		printf("\n");
-		ordering[target] = ordering[i - 1];
-		ordering[i - 1] = tmp;
-
+		ssc_dict_unref(dict);
 	}
 
 	return 1;
 }
-#endif //0
 
 int main()
 {
-	//run_test(test_dict_insert());
 
+#if 0
 	run_test(test_permutator(2));
 	run_test(test_permutator(4));
+#endif
+
+	run_test(test_dict_insert(test_strings_1));
+	run_test(test_dict_insert(test_strings_2));
+	run_test(test_dict_insert(test_strings_3));
+	run_test(test_dict_insert(test_strings_4));
 	
 	return 0;
 }
