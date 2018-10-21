@@ -22,6 +22,8 @@
 
 #include <string.h>
 
+#include <stdarg.h>
+
 #define run_test(x) \
 	do { \
 		fprintf(stderr, "Running test %s\n", #x); \
@@ -223,6 +225,66 @@ int test_dict_insert(char** strings)
 	return 1;
 }
 
+static char *test_strings_u[] = 
+{
+	"aaa",
+	"aa",
+	"aaaa",
+	"bbb",
+	NULL
+};
+
+int test_dict_insert_delete(char** strings, ...)
+{
+	int i, j;
+	char* check_ds[64];
+	int n_strings;
+	for (n_strings = 0; strings[n_strings]; n_strings++)
+		;
+
+	//Initialize both dictionary and check data structure
+	SscDict *dict = ssc_dict_new();
+	for (i = 0; i < n_strings; i++)
+		check_ds[i] = NULL;
+
+	va_list arglist;
+	va_start(arglist, strings);
+
+	const char *cmdstr;
+	for (i = 0; (cmdstr = va_arg(arglist, const char *)); i++)
+	{
+		int strnum = atoi(cmdstr + 1);
+		char* str = strings[strnum];
+		char* rhs;
+		if (cmdstr[0] == 'I')
+			rhs = str;
+		else if (cmdstr[0] == 'D')
+			rhs = NULL;
+		else
+			ssc_error("Bad command %c", cmdstr[0]);
+
+		ssc_debug("set %s --> %p", str, rhs);
+
+		char *r = ssc_dict_set(dict, str, strlen(str), rhs);
+		char *check_r = check_ds[strnum];
+		check_ds[strnum] = rhs;
+		ssc_assert(r == check_r, "Wrong answer, i=%d, str=%s", i, str);
+
+		ssc_dict_dump(dict);
+		for (j = 0; j < n_strings; j++)
+		{
+			r = ssc_dict_get(dict, strings[j], strlen(strings[j]));
+			check_r = check_ds[j];
+			ssc_assert(r == check_r,
+					"Inconsistent datastructures, i=%d, j=%d", i, j);
+		}
+	}
+
+	ssc_dict_unref(dict);
+
+	return 1;
+}
+
 int main()
 {
 
@@ -235,6 +297,13 @@ int main()
 	run_test(test_dict_insert(test_strings_2));
 	run_test(test_dict_insert(test_strings_3));
 	run_test(test_dict_insert(test_strings_4));
+
+	run_test(test_dict_insert_delete(test_strings_u,
+				"I0", "D1", "D2", "D3", "D0", NULL));
+	run_test(test_dict_insert_delete(test_strings_u,
+				"I0", "I2", "D2", "D0", NULL));
+	run_test(test_dict_insert_delete(test_strings_u,
+				"I0", "I2", "D0", "D2", NULL));
 	
 	return 0;
 }

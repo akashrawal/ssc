@@ -187,14 +187,20 @@ static void *collect_node(SscDict *dict, const void *key, size_t key_len)
 		int run_len = iter->len;
 		if (remains < run_len)
 		{
-			goto end;
+			iter = NULL;
+			break;
 		}
 
 		int i;
 		for (i = 0; i < run_len; i++)
 		{
 			if (ekey[i] != iter->ekey[i])
-				goto end;
+				break;
+		}
+		if (i < run_len)
+		{
+			iter = NULL;
+			break;
 		}
 
 		dict_node_array_append(array, iter);
@@ -211,6 +217,7 @@ static void *collect_node(SscDict *dict, const void *key, size_t key_len)
 		}
 	}
 
+	ekey = (const uint8_t *) key;
 	int array_size = dict_node_array_size(array);
 	while (iter)
 	{
@@ -292,7 +299,6 @@ static void *collect_node(SscDict *dict, const void *key, size_t key_len)
 	}
 
 
-end:
 	free(array->data);
 	return res;
 }
@@ -300,8 +306,6 @@ end:
 void *ssc_dict_set
 	(SscDict *dict, const void *key, size_t key_len, void *value)
 {
-	//TODO: deletion
-
 	if (value)
 	{
 		DictNode *node = create_node(dict, key, key_len);
