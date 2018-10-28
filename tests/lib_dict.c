@@ -189,43 +189,7 @@ static char* test_strings_4[] =
 	NULL
 };
 
-int test_dict_insert(char** strings)
-{
-	Permutator p[1];
-
-	int n_strings;
-	for (n_strings = 0; strings[n_strings]; n_strings++)
-		;
-
-	permutator_init(p, n_strings);
-
-	while (permutator_next(p))
-	{
-		SscDict *dict = ssc_dict_new();
-
-		int i, j;
-		for (i = 0; i < n_strings; i++)
-		{
-			char *key = strings[p->elements[i]];
-			ssc_dict_set(dict, key, strlen(key), key);
-
-			for (j = 0; j <= i; j++)
-			{
-				char *ckey = strings[p->elements[j]];
-				char *cckey = ssc_dict_get(dict, ckey, strlen(ckey));
-				ssc_assert(ckey == cckey,
-						"Wrong answer, j = %d, ckey=%s, cckey=%p",
-						j, ckey, cckey);
-			}
-		}
-
-		ssc_dict_unref(dict);
-	}
-
-	return 1;
-}
-
-static char *test_strings_u[] = 
+static char *test_strings_5[] = 
 {
 	"aaa",
 	"aa",
@@ -234,56 +198,141 @@ static char *test_strings_u[] =
 	NULL
 };
 
-int test_dict_insert_delete(char** strings, ...)
+typedef struct
 {
-	int i, j;
-	char* check_ds[64];
+	SscDict *dict;
+	int n_strings;
+	char **strings;
+	char *check_ds[64];
+} DictChecker;
+
+void dict_checker_init(DictChecker *c, char** strings)
+{
+	for (c->n_strings = 0; strings[c->n_strings]; c->n_strings++)
+		;
+	c->strings = strings;
+	c->dict = ssc_dict_new();
+
+	int i;
+	for (i = 0; i < c->n_strings; i++)
+		c->check_ds[i] = NULL;
+}
+
+void dict_checker_destroy(DictChecker *c)
+{
+	ssc_dict_unref(c->dict);
+}
+
+void dict_checker_check(DictChecker *c, char op, int idx)
+{
+	int i;
+	char *str = c->strings[idx];
+	char *rhs = (op == 'I') ? str : NULL;
+
+	FILE *stream;
+
+	size_t isize = 0;
+	char* istate = NULL;
+	stream = open_memstream(&istate, &isize);
+	ssc_dict_fdump(c->dict, stream);
+	fclose(stream);
+
+	char *res = ssc_dict_set(c->dict, str, strlen(str), rhs);
+	char *cres = c->check_ds[idx];
+	c->check_ds[idx] = rhs;
+
+	size_t fsize = 0;
+	char* fstate = NULL;
+	stream = open_memstream(&fstate, &fsize);
+	ssc_dict_fdump(c->dict, stream);
+	fclose(stream);
+
+	ssc_assert(res == cres,
+			"Wrong answer, str=%s, rhs=%p, res=%p, cres=%p, "
+			"istate:\n%s\n"
+			"fstate:\n%s\n",
+			str, rhs, res, cres, istate, fstate);
+	
+	for (i = 0; i < c->n_strings; i++)
+	{
+		res = ssc_dict_get(c->dict, c->strings[i], strlen(c->strings[i]));
+		ssc_assert(res == c->check_ds[i],
+				"Inconsistent datastructures, i=%d, res=%p, cres=%p"
+				"istate:\n%s\n"
+				"fstate:\n%s\n",
+				i, res, c->check_ds[i], istate, fstate);
+	}
+
+	free(istate);
+	free(fstate);
+}
+
+int test_dict_insert(char** strings)
+{
 	int n_strings;
 	for (n_strings = 0; strings[n_strings]; n_strings++)
 		;
 
-	//Initialize both dictionary and check data structure
-	SscDict *dict = ssc_dict_new();
-	for (i = 0; i < n_strings; i++)
-		check_ds[i] = NULL;
+	Permutator p[1];
+	permutator_init(p, n_strings);
 
-	va_list arglist;
-	va_start(arglist, strings);
-
-	const char *cmdstr;
-	for (i = 0; (cmdstr = va_arg(arglist, const char *)); i++)
+	while (permutator_next(p))
 	{
-		int strnum = atoi(cmdstr + 1);
-		char* str = strings[strnum];
-		char* rhs;
-		if (cmdstr[0] == 'I')
-			rhs = str;
-		else if (cmdstr[0] == 'D')
-			rhs = NULL;
-		else
-			ssc_error("Bad command %c", cmdstr[0]);
+		DictChecker c[1];
 
-		ssc_debug("set %s --> %p", str, rhs);
+		dict_checker_init(c, strings);
 
-		char *r = ssc_dict_set(dict, str, strlen(str), rhs);
-		char *check_r = check_ds[strnum];
-		check_ds[strnum] = rhs;
-		ssc_assert(r == check_r, "Wrong answer, i=%d, str=%s", i, str);
+		int i;
+		for (i = 0; i < n_strings; i++)
+			dict_checker_check(c, 'I', p->elements[i]);
 
-		ssc_dict_dump(dict);
-		for (j = 0; j < n_strings; j++)
-		{
-			r = ssc_dict_get(dict, strings[j], strlen(strings[j]));
-			check_r = check_ds[j];
-			ssc_assert(r == check_r,
-					"Inconsistent datastructures, i=%d, j=%d", i, j);
-		}
+		dict_checker_destroy(c);
 	}
-
-	ssc_dict_unref(dict);
 
 	return 1;
 }
+
+
+int test_dict_insert_delete(char** strings, int n_ops)
+{
+	int i;
+	int n_strings;
+	for (n_strings = 0; strings[n_strings]; n_strings++)
+		;
+
+	uint64_t lim = 1;
+	for (i = 0; i < n_ops; i++)
+	{
+		uint64_t c1 = lim;
+		lim *= (n_strings * 2);
+		uint64_t c2 = lim;
+		c2 /= (n_strings * 2);
+		ssc_assert(c1 == c2, "Overflow detected, too many test cases");
+	}
+
+	uint64_t cid;
+	for (cid = 0; cid < lim; cid++)
+	{
+		uint64_t opbuf = cid;
+
+		DictChecker c[1];
+		dict_checker_init(c, strings);
+
+		for (i = 0; i < n_ops; i++)
+		{
+			int op = opbuf % 2;
+			opbuf /= 2;
+			int strid = opbuf % n_strings;
+			opbuf /= n_strings;
+
+			dict_checker_check(c, op ? 'D' : 'I', strid);
+		}
+
+		dict_checker_destroy(c);
+	}
+	return 1;
+}
+
 
 int main()
 {
@@ -298,12 +347,8 @@ int main()
 	run_test(test_dict_insert(test_strings_3));
 	run_test(test_dict_insert(test_strings_4));
 
-	run_test(test_dict_insert_delete(test_strings_u,
-				"I0", "D1", "D2", "D3", "D0", NULL));
-	run_test(test_dict_insert_delete(test_strings_u,
-				"I0", "I2", "D2", "D0", NULL));
-	run_test(test_dict_insert_delete(test_strings_u,
-				"I0", "I2", "D0", "D2", NULL));
+	run_test(test_dict_insert_delete(test_strings_5, 4));
+	run_test(test_dict_insert_delete(test_strings_4, 4));
 	
 	return 0;
 }

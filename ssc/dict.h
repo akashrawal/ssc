@@ -31,3 +31,4 @@ SscDict *ssc_dict_new();
 mmc_rc_declare(SscDict, ssc_dict);
 
 void ssc_dict_dump(SscDict *dict);
+void ssc_dict_fdump(SscDict *dict, FILE *stream);

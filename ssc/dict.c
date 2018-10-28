@@ -90,11 +90,11 @@ static DictNode *create_node
 			if (i == run_len)
 			{
 				DictNode *next = ssc_byte_map_get
-					(&(target->next), ekey[run_len]);
+					(&(target->next), ekey[ekey_offset + run_len]);
 				if (next)
 				{
 					target_ptr_node = target;
-					target_ptr_chr = ekey[run_len];
+					target_ptr_chr = ekey[ekey_offset + run_len];
 					target = next;
 					ekey_offset += run_len + 1;
 					continue;
@@ -223,10 +223,11 @@ static void *collect_node(SscDict *dict, const void *key, size_t key_len)
 	{
 		DictNode *ptr_node;
 		uint8_t ptr_chr;
+		int reduce_len = iter->len + 1;
 		if (array_size > 1)
 		{
 			ptr_node = array->data[array_size - 2];
-			ptr_chr = ekey[key_len - iter->len - 1];
+			ptr_chr = ekey[key_len - reduce_len];
 		}
 		else
 		{
@@ -296,6 +297,7 @@ static void *collect_node(SscDict *dict, const void *key, size_t key_len)
 		if (array_size == 0)
 			break;
 		iter = array->data[array_size - 1];
+		key_len -= reduce_len;
 	}
 
 
@@ -398,13 +400,14 @@ SscDict *ssc_dict_new()
 	return dict;
 }
 
-static void ssc_dict_dump_rec(DictNode *node, int level)
+//Debugging functions
+static void ssc_dict_dump_rec(DictNode *node, int level, FILE *stream)
 {
 	int i, j;
-	fprintf(stderr, "<%d|", node->len);
+	fprintf(stream, "<%d|", node->len);
 	for (i = 0; i < node->len; i++)
-		fprintf(stderr, "%c", node->ekey[i]);
-	fprintf(stderr, "|%p|%p>\n", node, node->value);
+		fprintf(stream, "%c", node->ekey[i]);
+	fprintf(stream, "|%p|%p>\n", node, node->value);
 
 	uint8_t keys[256];
 	DictNode *values[256];
@@ -414,23 +417,29 @@ static void ssc_dict_dump_rec(DictNode *node, int level)
 	for (i = 0; i < n_tuples; i++)
 	{
 		for (j = 0; j <= level; j++)
-			fprintf(stderr, "  ");
-		fprintf(stderr, "[%c]", keys[i]);
-		ssc_dict_dump_rec(values[i], level + 1);
+			fprintf(stream, "  ");
+		fprintf(stream, "[%c]", keys[i]);
+		ssc_dict_dump_rec(values[i], level + 1, stream);
+	}
+}
+
+void ssc_dict_fdump(SscDict *dict, FILE *stream)
+{
+	if (dict->root)
+	{
+		fprintf(stream, "[#]");
+		ssc_dict_dump_rec(dict->root, 0, stream);
+	}
+	else
+	{
+		fprintf(stream, "Tree %p is empty", dict);
 	}
 }
 
 void ssc_dict_dump(SscDict *dict)
 {
-	if (dict->root)
-	{
-		ssc_debug("Dumping tree %p", dict);
-		fprintf(stderr, "[#]");
-		ssc_dict_dump_rec(dict->root, 0);
-	}
-	else
-	{
-		ssc_debug("Tree %p is empty", dict);
-	}
+	ssc_debug("Dumping tree %p", dict);
+	ssc_dict_fdump(dict, stderr);
 }
+
 
