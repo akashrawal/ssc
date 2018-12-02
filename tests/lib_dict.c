@@ -223,6 +223,13 @@ void dict_checker_destroy(DictChecker *c)
 	ssc_dict_unref(c->dict);
 }
 
+static void dump_tree(char *istate, SscDict *dict)
+{
+	fprintf(stderr, "FAILURE\n\nInitial tree:\n%s\n\nFinal tree:\n", istate);
+	ssc_dict_fdump(dict, stderr);
+	fprintf(stderr, "\n\n");
+}
+
 void dict_checker_check(DictChecker *c, char op, int idx)
 {
 	int i;
@@ -241,30 +248,25 @@ void dict_checker_check(DictChecker *c, char op, int idx)
 	char *cres = c->check_ds[idx];
 	c->check_ds[idx] = rhs;
 
-	size_t fsize = 0;
-	char* fstate = NULL;
-	stream = open_memstream(&fstate, &fsize);
-	ssc_dict_fdump(c->dict, stream);
-	fclose(stream);
-
-	ssc_assert(res == cres,
-			"Wrong answer, str=%s, rhs=%p, res=%p, cres=%p, "
-			"istate:\n%s\n"
-			"fstate:\n%s\n",
-			str, rhs, res, cres, istate, fstate);
+	if (res != cres)
+	{
+		dump_tree(istate, c->dict);
+		ssc_error("Wrong answer, str=%s, rhs=%p, res=%p, cres=%p",
+				str, rhs, res, cres);
+	}
 	
 	for (i = 0; i < c->n_strings; i++)
 	{
 		res = ssc_dict_get(c->dict, c->strings[i], strlen(c->strings[i]));
-		ssc_assert(res == c->check_ds[i],
-				"Inconsistent datastructures, i=%d, res=%p, cres=%p"
-				"istate:\n%s\n"
-				"fstate:\n%s\n",
-				i, res, c->check_ds[i], istate, fstate);
+		if (res != c->check_ds[i])
+		{
+			dump_tree(istate, c->dict);
+			ssc_error("Inconsistent datastructures, i=%d, res=%p, cres=%p",
+				i, res, c->check_ds[i]);
+		}
 	}
 
 	free(istate);
-	free(fstate);
 }
 
 int test_dict_insert(char** strings)
