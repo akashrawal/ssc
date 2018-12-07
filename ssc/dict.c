@@ -33,7 +33,7 @@ typedef struct
 struct _SscDict
 {
 	MmcRC parent;
-	DictNode *root;
+	DictNode root;
 };
 
 mmc_rc_define(SscDict, ssc_dict);
@@ -62,7 +62,7 @@ static DictNode *create_node
 	//Find the node to graft a branch
 	DictNode *target_ptr_node = NULL;
 	int target_ptr_chr = 0;
-	DictNode *target = dict->root;
+	DictNode *target = &(dict->root);
 	int target_offset = 0;
 
 	int ekey_offset = 0;
@@ -109,50 +109,28 @@ static DictNode *create_node
 	
 	//Graft the starting point for the new branch
 	DictNode *start_node;
-	if (target)
+	if (target_offset == target->len)
 	{
-		if (target_offset == target->len)
-		{
-			start_node = target;
-		}
-		else
-		{
-			//Splice target, second part --> start_node
-			DictNode *p1 = alloc_node(target->ekey, target_offset);
-			DictNode *p2 = alloc_node(target->ekey + target_offset + 1, 
-					target->len - target_offset - 1);
-			ssc_byte_map_set(&(p1->next), target->ekey[target_offset], p2);
-			start_node = p1;
-			p2->next = target->next;
-			p2->value = target->value;
-			if (target_ptr_node)
-				ssc_byte_map_set(&(target_ptr_node->next), target_ptr_chr, p1);
-			else
-				dict->root = p1;
-			start_node = p1;
-			free(target);
-		}
+		start_node = target;
 	}
 	else
 	{
-		ssc_assert(target_offset == 0, "Assertion failure");
-		start_node = NULL;	
+		ssc_assert(target != &(dict->root),
+				"Assertion failure (cannot split root node)");
+		//Splice target, second part --> start_node
+		DictNode *p1 = alloc_node(target->ekey, target_offset);
+		DictNode *p2 = alloc_node(target->ekey + target_offset + 1, 
+				target->len - target_offset - 1);
+		ssc_byte_map_set(&(p1->next), target->ekey[target_offset], p2);
+		start_node = p1;
+		p2->next = target->next;
+		p2->value = target->value;
+		ssc_byte_map_set(&(target_ptr_node->next), target_ptr_chr, p1);
+		start_node = p1;
+		free(target);
 	}
 
 	//Grow the new branch
-
-	if (start_node == NULL)
-	{
-		int run_len = key_len - ekey_offset;
-		if (run_len > MAX_NODE_LEN)
-			run_len = MAX_NODE_LEN;
-		
-		start_node = alloc_node(ekey + ekey_offset, run_len);
-		ssc_assert(dict->root == NULL, "Assertion failure");
-		dict->root = start_node;
-		ekey_offset += run_len;
-	}
-
 	DictNode *res = start_node;
 
 	while (ekey_offset < key_len)
@@ -178,7 +156,7 @@ static void *collect_node(SscDict *dict, const void *key, size_t key_len)
 	DictNodeArray array[1];
 	dict_node_array_init(array);
 
-	DictNode *iter = dict->root;
+	DictNode *iter = &(dict->root);
 
 	//Find the node and set the value
 	while (iter)
@@ -231,10 +209,11 @@ static void *collect_node(SscDict *dict, const void *key, size_t key_len)
 		}
 		else
 		{
-			ptr_node = NULL;
-			ptr_chr = 0;
+			//Do not touch root node
+			break;
 		}
 
+		ssc_assert(ptr_node, "TMP: Assertion failure");
 
 		//Coalesc forwards if possible
 		do 
@@ -266,10 +245,7 @@ static void *collect_node(SscDict *dict, const void *key, size_t key_len)
 			nn->value = next->value;
 
 			//Amend the structure to replace the old nodes
-			if (ptr_node)
-				ssc_byte_map_set(&(ptr_node->next), ptr_chr, nn);
-			else
-				dict->root = nn;
+			ssc_byte_map_set(&(ptr_node->next), ptr_chr, nn);
 
 			ssc_byte_map_clear(&(iter->next));
 			free(iter);
@@ -288,10 +264,7 @@ static void *collect_node(SscDict *dict, const void *key, size_t key_len)
 		free(iter);
 
 		//Correct data structures
-		if (ptr_node)
-			ssc_byte_map_set(&(ptr_node->next), ptr_chr, NULL);
-		else
-			dict->root = NULL;
+		ssc_byte_map_set(&(ptr_node->next), ptr_chr, NULL);
 
 		array_size--; 
 		if (array_size == 0)
@@ -327,7 +300,7 @@ void *ssc_dict_get
 	const uint8_t *ekey = (const uint8_t *) key;
 	const uint8_t *lkey = ekey + key_len;
 
-	DictNode *iter = dict->root;
+	DictNode *iter = &(dict->root);
 
 	while (iter)
 	{
@@ -365,8 +338,7 @@ static void ssc_dict_destroy(SscDict *dict)
 
 	dict_node_array_init(stack);
 
-	if (dict->root)
-		dict_node_array_append(stack, dict->root);
+	dict_node_array_append(stack, &(dict->root));
 
 	while (dict_node_array_size(stack) > 0)
 	{
@@ -382,7 +354,8 @@ static void ssc_dict_destroy(SscDict *dict)
 			dict_node_array_append(stack, values[i]);
 
 		ssc_byte_map_clear(&(node->next));
-		free(node);
+		if (node != &(dict->root))
+			free(node);
 	}
 
 	free(stack->data);
@@ -395,7 +368,9 @@ SscDict *ssc_dict_new()
 
 	mmc_rc_init(dict);
 
-	dict->root = NULL;
+    dict->root.value = NULL;
+    ssc_byte_map_init(&(dict->root.next));
+    dict->root.len = 0;
 
 	return dict;
 }
@@ -425,15 +400,8 @@ static void ssc_dict_dump_rec(DictNode *node, int level, FILE *stream)
 
 void ssc_dict_fdump(SscDict *dict, FILE *stream)
 {
-	if (dict->root)
-	{
-		fprintf(stream, "[#]");
-		ssc_dict_dump_rec(dict->root, 0, stream);
-	}
-	else
-	{
-		fprintf(stream, "Tree %p is empty", dict);
-	}
+	fprintf(stream, "[#]");
+	ssc_dict_dump_rec(&(dict->root), 0, stream);
 }
 
 void ssc_dict_dump(SscDict *dict)
