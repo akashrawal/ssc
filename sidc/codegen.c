@@ -649,7 +649,7 @@ void ssc_var_code_for_read
 			"        SscSegment sub_seg;\n"
 			"        %s%s.len = ssc_segment_read_uint32(seg);\n"
 			"        if (ssc_msg_iter_get_segment(msg_iter, "
-			"%d * %s%s.len, %d * %s%s.len, &sub_seg) == MMC_FAILURE)\n"
+			"%d * %s%s.len, %d * %s%s.len, &sub_seg) == MDSL_FAILURE)\n"
 			"            goto _ssc_fail_%s;\n",
 			prefix, var->name, 
 			(int) base_size.n_bytes, prefix, var->name,
@@ -664,7 +664,7 @@ void ssc_var_code_for_read
 			"            if (! (%s%s.data = (", 
 			prefix, var->name);
 		ssc_gen_base_type(var->type, c_file);
-		fprintf(c_file, " *) mmc_tryalloc(sizeof(");
+		fprintf(c_file, " *) mdsl_tryalloc(sizeof(");
 		ssc_gen_base_type(var->type, c_file);
 		fprintf(c_file, ") * %s%s.len)))\n"
 			"                goto _ssc_fail_%s;\n"
@@ -717,7 +717,7 @@ void ssc_var_code_for_read
 			"        if (presence)\n"
 			"        {\n"
 			"            if (ssc_msg_iter_get_segment(msg_iter, "
-			"%d, %d, &sub_seg) == MMC_FAILURE)\n"
+			"%d, %d, &sub_seg) == MDSL_FAILURE)\n"
 			"                goto _ssc_fail_%s;\n",
 			(int) base_size.n_bytes, 
 			(int) base_size.n_submsgs, 
@@ -728,7 +728,7 @@ void ssc_var_code_for_read
 			"            if (! (%s%s = (",
 				prefix, var->name);
 			ssc_gen_base_type(var->type, c_file);
-			fprintf(c_file, " *) mmc_tryalloc(sizeof(");
+			fprintf(c_file, " *) mdsl_tryalloc(sizeof(");
 			ssc_gen_base_type(var->type, c_file);
 			fprintf(c_file, "))))\n"
 			"            goto _ssc_fail_%s;\n",

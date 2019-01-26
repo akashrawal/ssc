@@ -65,11 +65,11 @@ int main(int argc, char *argv[])
 		
 		outprefix_len = strlen(outprefix);
 		
-		c_file = mmc_alloc(outprefix_len + 3);
+		c_file = mdsl_alloc(outprefix_len + 3);
 		strcpy(c_file, outprefix);
 		strcpy(c_file + outprefix_len, ".c");
 		
-		h_file = mmc_alloc(outprefix_len + 3);
+		h_file = mdsl_alloc(outprefix_len + 3);
 		strcpy(h_file, outprefix);
 		strcpy(h_file + outprefix_len, ".h");
 	}
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	
 	//Parse the input file
 	if (ssc_parser_parse_needed(db, stderr, infile)	
-			!= MMC_SUCCESS)
+			!= MDSL_SUCCESS)
 	{
 		fprintf(stderr, "Parsing failed, exiting\n");
 		exit(1);

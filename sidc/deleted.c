@@ -36,7 +36,7 @@ static void stack_init(Stack *stack)
 {
 	stack->top = 0;
 	stack->alloc_len = 16;
-	stack->data = (StackEl *) mmc_alloc
+	stack->data = (StackEl *) mdsl_alloc
 		(sizeof(StackEl) * stack->alloc_len);
 }
 

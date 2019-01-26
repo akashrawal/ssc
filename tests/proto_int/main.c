@@ -50,7 +50,7 @@ void test_call(SscServant *servant, int val)
 	mmc_msg_unref(msg);
 
 	//Deserialize the reply returned
-	if (TestIface__increment__read_reply(ctx.reply, &out_args) == MMC_FAILURE)
+	if (TestIface__increment__read_reply(ctx.reply, &out_args) == MDSL_FAILURE)
 		ssc_error("Failed to deserialize the reply");
 	mmc_msg_unref(ctx.reply);
 

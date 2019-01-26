@@ -21,7 +21,7 @@
 //Allocator for semantic objects
 typedef struct _SscAllocator SscAllocator;
 
-mmc_rc_declare(SscAllocator, ssc_allocator);
+mdsl_rc_declare(SscAllocator, ssc_allocator);
 
 SscAllocator *ssc_allocator_new();
 void *ssc_allocator_alloc(SscAllocator *allocator, size_t size);
@@ -163,7 +163,7 @@ typedef struct
 
 typedef struct _SscSymbolDB SscSymbolDB;
 
-mmc_rc_declare(SscSymbolDB, ssc_symbol_db);
+mdsl_rc_declare(SscSymbolDB, ssc_symbol_db);
 
 SscSymbolDB *ssc_symbol_db_new();
 	

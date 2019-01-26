@@ -102,14 +102,14 @@
 
 [0-9][A-Za-z0-9_]* {
 	if (ssc_parser_read_int(parser, yytext, &(yylval->xint)) 
-			!= MMC_SUCCESS)
+			!= MDSL_SUCCESS)
 		return -1;
 	return VAL_NUM;
 }
 
 "\""([^"\n\\]|("\\".))*"\"" { 
 	if (ssc_parser_read_string(parser, yytext, &(yylval->xstr))
-			!= MMC_SUCCESS)
+			!= MDSL_SUCCESS)
 		return -1;
 	return VAL_STRING;
 }

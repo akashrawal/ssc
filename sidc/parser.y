@@ -100,7 +100,7 @@ def: struct
 //Structure
 struct: KW_STRUCT VAL_ID LCURLY field_list RCURLY {
 			if (ssc_parser_add_struct(parser, $2.xstr, $4.xrl)
-				!= MMC_SUCCESS)
+				!= MDSL_SUCCESS)
 				YYABORT;
 		}
 	;
@@ -127,13 +127,13 @@ field_list_open: field_list type VAL_ID {
 interface: KW_INTERFACE VAL_ID LCURLY fn_list RCURLY {
 			if (ssc_parser_add_interface
 						(parser, $2.xstr, NULL, $4.xrl)
-					!= MMC_SUCCESS)
+					!= MDSL_SUCCESS)
 				YYABORT;
 		}
 	| KW_INTERFACE VAL_ID COLON VAL_ID LCURLY fn_list RCURLY{
 			if (ssc_parser_add_interface
 						(parser, $2.xstr, $4.xstr, $6.xrl)
-					!= MMC_SUCCESS)
+					!= MDSL_SUCCESS)
 				YYABORT;
 		}
 	;
@@ -181,7 +181,7 @@ args_nonempty: type VAL_ID {
 
 //Reference
 ref: KW_REF string_exp {
-			if (ssc_parser_exec_ref(parser, $2.xstr) != MMC_SUCCESS)
+			if (ssc_parser_exec_ref(parser, $2.xstr) != MDSL_SUCCESS)
 				YYABORT;
 		}
 
@@ -189,13 +189,13 @@ ref: KW_REF string_exp {
 constant: KW_INTEGER VAL_ID EQUAL integer_exp {
 			if (ssc_parser_add_integer_constant
 						(parser, $2.xstr, $4.xint)
-					!= MMC_SUCCESS)
+					!= MDSL_SUCCESS)
 				YYABORT;
 		}
 	| KW_STRING VAL_ID EQUAL string_exp {
 			if (ssc_parser_add_string_constant
 						(parser, $2.xstr, $4.xstr)
-					!= MMC_SUCCESS)
+					!= MDSL_SUCCESS)
 				YYABORT;
 		}
 	;

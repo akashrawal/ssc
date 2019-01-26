@@ -185,7 +185,7 @@ static unsigned int ssc_digitval(char ch)
 		return 16;
 }
 
-MmcStatus ssc_parser_read_int
+MdslStatus ssc_parser_read_int
 	(SscParser *parser, const char *instr, ssc_integer *res)
 {
 	size_t len = strlen(instr);
@@ -229,7 +229,7 @@ MmcStatus ssc_parser_read_int
 		{
 			ssc_parser_error(parser, "Unrecognized character %c", 
 				instr[i]);
-			return MMC_FAILURE;
+			return MDSL_FAILURE;
 		}
 		
 		val *= base;
@@ -237,7 +237,7 @@ MmcStatus ssc_parser_read_int
 	}
 	
 	*res = val;
-	return MMC_SUCCESS;
+	return MDSL_SUCCESS;
 }
 
 //////////////////////////////////////
@@ -267,11 +267,11 @@ char *ssc_parser_strcat
 	return res;
 }
 
-MmcStatus ssc_parser_read_string
+MdslStatus ssc_parser_read_string
 	(SscParser *parser, const char *instr, char **res)
 {
 	int i;
-	MmcRBuf buf[1];
+	MdslRBuf buf[1];
 #define ch (instr[i])
 #define inc \
 	i++; \
@@ -281,7 +281,7 @@ MmcStatus ssc_parser_read_string
 		goto fail; \
 	}
 	
-	mmc_rbuf_init(buf);
+	mdsl_rbuf_init(buf);
 	
 	i = 1; 
 	while (ch != '\"')
@@ -294,7 +294,7 @@ MmcStatus ssc_parser_read_string
 #define subst(ech, rpl) \
 			if (ch == ech) \
 			{ \
-				if (rpl) mmc_rbuf_append1(buf, rpl); \
+				if (rpl) mdsl_rbuf_append1(buf, rpl); \
 				inc; \
 				continue; \
 			}
@@ -341,7 +341,7 @@ MmcStatus ssc_parser_read_string
 						"Null characters not allowed in strings"); \
 					goto fail; \
 				} \
-				mmc_rbuf_append1(buf, val); \
+				mdsl_rbuf_append1(buf, val); \
 				continue; \
 			}
 				
@@ -366,7 +366,7 @@ MmcStatus ssc_parser_read_string
 		}
 		
 		//For everything else
-		mmc_rbuf_append1(buf, ch);
+		mdsl_rbuf_append1(buf, ch);
 		inc;
 	}
 	
@@ -378,46 +378,46 @@ MmcStatus ssc_parser_read_string
 	memcpy(*res, buf->data, buf->len);
 	(*res)[buf->len] = '\0';
 	free(buf->data);
-	return MMC_SUCCESS;
+	return MDSL_SUCCESS;
 	
 fail:
 	free(buf->data);
-	return MMC_FAILURE;
+	return MDSL_FAILURE;
 	
 }
 
 
 //
 //Integer constant
-MmcStatus ssc_parser_add_integer_constant
+MdslStatus ssc_parser_add_integer_constant
 	(SscParser *parser, const char *name, ssc_integer val)
 {
 	SscSymbol *sym;
 	
 	sym = ssc_parser_alloc_symbol(parser, name, SSC_SYMBOL_INTEGER);
 	if (! sym)
-		return MMC_FAILURE;
+		return MDSL_FAILURE;
 	
 	sym->v.xint = val;
 	
-	return MMC_SUCCESS;
+	return MDSL_SUCCESS;
 }
 
 //
 //String constant
-MmcStatus ssc_parser_add_string_constant
+MdslStatus ssc_parser_add_string_constant
 	(SscParser *parser, const char *name, const char *val)
 {
 	SscSymbol *sym;
 	
 	sym = ssc_parser_alloc_symbol(parser, name, SSC_SYMBOL_STRING);
 	if (! sym)
-		return MMC_FAILURE;
+		return MDSL_FAILURE;
 	
 	sym->v.xstr = ssc_parser_alloc_final(parser, strlen(val) + 1);
 	strcpy(sym->v.xstr, val);
 	
-	return MMC_SUCCESS;
+	return MDSL_SUCCESS;
 }
 	
 
@@ -435,7 +435,7 @@ SscRList *ssc_parser_rlist_prepend
 }
 
 
-static MmcStatus ssc_parser_rlist_to_array_checked (SscParser *parser, 
+static MdslStatus ssc_parser_rlist_to_array_checked (SscParser *parser, 
 	SscRList *rlist, size_t name_offset, 
 	void ***array_res, size_t *len_res,
 	const char *clash_msg, const char *pname)
@@ -450,8 +450,8 @@ static MmcStatus ssc_parser_rlist_to_array_checked (SscParser *parser,
 	len = 0;
 	for (iter = rlist; iter; iter = iter->prev)
 	{
-		char *fname = (char *) MMC_PTR_ADD(iter->d.data, name_offset);
-		if (ssc_bst_insert(index, fname, fname) != MMC_SUCCESS)
+		char *fname = (char *) MDSL_PTR_ADD(iter->d.data, name_offset);
+		if (ssc_bst_insert(index, fname, fname) != MDSL_SUCCESS)
 		{
 			ssc_parser_error(parser, clash_msg, fname, pname);
 			break;
@@ -462,7 +462,7 @@ static MmcStatus ssc_parser_rlist_to_array_checked (SscParser *parser,
 	ssc_bst_unref(index);
 	
 	if (iter)
-		return MMC_FAILURE;
+		return MDSL_FAILURE;
 	
 	//Create array
 	array = ssc_parser_alloc_final(parser, sizeof(void *) * len);
@@ -473,7 +473,7 @@ static MmcStatus ssc_parser_rlist_to_array_checked (SscParser *parser,
 		
 	*array_res = array;
 	*len_res = len;
-	return MMC_SUCCESS;
+	return MDSL_SUCCESS;
 }
 
 //variable
@@ -492,25 +492,25 @@ SscVar *ssc_parser_new_var
 
 
 //Struct
-MmcStatus ssc_parser_add_struct
+MdslStatus ssc_parser_add_struct
 	(SscParser *parser, const char *name, SscRList *fields)
 {
 	SscSymbol *sym;
 	
 	sym = ssc_parser_alloc_symbol(parser, name, SSC_SYMBOL_STRUCT);
 	if (! sym)
-		return MMC_FAILURE;
+		return MDSL_FAILURE;
 	
 	if (ssc_parser_rlist_to_array_checked
 			(parser, fields, offsetof(SscVar, name), 
 			(void ***) &(sym->v.xstruct.fields.a), &(sym->v.xstruct.fields.len),
 			"Name clash for field %s in struct %s", name)
-		!= MMC_SUCCESS)
+		!= MDSL_SUCCESS)
 	{
-		return MMC_FAILURE;
+		return MDSL_FAILURE;
 	}
 	
-	return MMC_SUCCESS;
+	return MDSL_SUCCESS;
 }
 
 //Function
@@ -528,7 +528,7 @@ SscFn *ssc_parser_new_fn(SscParser *parser,
 			(parser, args, offsetof(SscVar, name), 
 			(void ***) &(fn->in.a), &(fn->in.len) ,
 			"Name clash for argument %s in function %s", name)
-		!= MMC_SUCCESS)
+		!= MDSL_SUCCESS)
 	{
 		return NULL;
 	}
@@ -537,7 +537,7 @@ SscFn *ssc_parser_new_fn(SscParser *parser,
 			(parser, out_args, offsetof(SscVar, name), 
 			(void ***) &(fn->out.a), &(fn->out.len) ,
 			"Name clash for out-argument %s in function %s", name)
-		!= MMC_SUCCESS)
+		!= MDSL_SUCCESS)
 	{
 		return NULL;
 	}
@@ -546,7 +546,7 @@ SscFn *ssc_parser_new_fn(SscParser *parser,
 }
 
 //Interface
-MmcStatus ssc_parser_add_interface(SscParser *parser, 
+MdslStatus ssc_parser_add_interface(SscParser *parser, 
 	const char *name, const char *parent, SscRList *fns)
 {
 	SscSymbol *sym, *psym;
@@ -556,40 +556,40 @@ MmcStatus ssc_parser_add_interface(SscParser *parser,
 		psym = ssc_parser_lookup_expecting
 			(parser, parent, SSC_SYMBOL_INTERFACE);
 		if (psym == NULL)
-			return MMC_FAILURE;
+			return MDSL_FAILURE;
 	}
 	else
 		psym = NULL;
 	
 	sym = ssc_parser_alloc_symbol(parser, name, SSC_SYMBOL_INTERFACE);
 	if (! sym)
-		return MMC_FAILURE;
+		return MDSL_FAILURE;
 	sym->v.xiface.parent = psym;
 	
 	if (ssc_parser_rlist_to_array_checked
 			(parser, fns, offsetof(SscFn, name), 
 			(void ***) &(sym->v.xiface.fns), &(sym->v.xiface.fns_len),
 			"Name clash for function %s in interface %s", name)
-		!= MMC_SUCCESS)
+		!= MDSL_SUCCESS)
 	{
-		return MMC_FAILURE;
+		return MDSL_FAILURE;
 	}
 	
-	return MMC_SUCCESS;
+	return MDSL_SUCCESS;
 }
 	
 //Reference
-MmcStatus ssc_parser_exec_ref(SscParser *parser, const char *name)
+MdslStatus ssc_parser_exec_ref(SscParser *parser, const char *name)
 {
 	SscSymbol *iter;
 	SscFileData file_data;
 	
 	//Ensure that the file is there
 	if (ssc_parser_parse_needed(parser->db, parser->log, name)
-		!= MMC_SUCCESS)
+		!= MDSL_SUCCESS)
 	{
 		ssc_parser_error(parser, "Could not refer to file %s", name);
-		return MMC_FAILURE;
+		return MDSL_FAILURE;
 	}
 	
 	//Import the symbols in our context
@@ -599,7 +599,7 @@ MmcStatus ssc_parser_exec_ref(SscParser *parser, const char *name)
 		ssc_bst_insert(parser->index, iter->name, iter);
 	}
 	
-	return MMC_SUCCESS;
+	return MDSL_SUCCESS;
 }
 
 static SscParser *ssc_parser_new
@@ -608,7 +608,7 @@ static SscParser *ssc_parser_new
 	SscParser *parser;
 	int i;
 	
-	parser = (SscParser *) mmc_alloc
+	parser = (SscParser *) mdsl_alloc
 		(sizeof(SscParser) + strlen(filename) + 1);
 		
 	parser->db = db;
@@ -644,7 +644,7 @@ static void ssc_parser_destroy(SscParser *parser)
 
 //Interface presented by parser
 //All errors and warnings are printed to log stream.
-MmcStatus ssc_parser_parse_needed
+MdslStatus ssc_parser_parse_needed
 	(SscSymbolDB *db, FILE *log, const char *filename)
 {
 	SscParser *parser = ssc_parser_new(db, log, filename);
@@ -723,10 +723,10 @@ MmcStatus ssc_parser_parse_needed
 	
 success:
 	ssc_parser_destroy(parser);
-	return MMC_SUCCESS;
+	return MDSL_SUCCESS;
 
 fail:
 	ssc_parser_destroy(parser);
-	return MMC_FAILURE;
+	return MDSL_FAILURE;
 }
 

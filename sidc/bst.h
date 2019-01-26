@@ -21,11 +21,11 @@
 
 typedef struct _SscBst SscBst;
 
-mmc_rc_declare(SscBst, ssc_bst);
+mdsl_rc_declare(SscBst, ssc_bst);
 
 SscBst *ssc_bst_new();
 
-MmcStatus ssc_bst_insert(SscBst *bst, const char *key, void *value);
+MdslStatus ssc_bst_insert(SscBst *bst, const char *key, void *value);
 
 void *ssc_bst_lookup(SscBst *bst, const char *key);
 

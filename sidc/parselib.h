@@ -102,7 +102,7 @@ SscSymbol *ssc_parser_lookup_expecting
 
 ///////////////////////////////
 //Integer related functions
-MmcStatus ssc_parser_read_int
+MdslStatus ssc_parser_read_int
 	(SscParser *parser, const char *instr, ssc_integer *res);
 
 //////////////////////////////////////
@@ -110,17 +110,17 @@ MmcStatus ssc_parser_read_int
 char *ssc_parser_strdup(SscParser *parser, const char *str);
 char *ssc_parser_strcat
 	(SscParser *parser, const char *str1, const char *str2);
-MmcStatus ssc_parser_read_string
+MdslStatus ssc_parser_read_string
 	(SscParser *parser, const char *instr, char **res);
 
 //
 //Integer constant
-MmcStatus ssc_parser_add_integer_constant
+MdslStatus ssc_parser_add_integer_constant
 	(SscParser *parser, const char *name, ssc_integer val);
 
 //
 //String constant
-MmcStatus ssc_parser_add_string_constant
+MdslStatus ssc_parser_add_string_constant
 	(SscParser *parser, const char *name, const char *val);
 
 //List
@@ -132,7 +132,7 @@ SscVar *ssc_parser_new_var
 	(SscParser *parser, SscType type, const char *name);
 
 //Struct
-MmcStatus ssc_parser_add_struct
+MdslStatus ssc_parser_add_struct
 	(SscParser *parser, const char *name, SscRList *fields);
 
 //Function
@@ -140,14 +140,14 @@ SscFn *ssc_parser_new_fn(SscParser *parser,
 	const char *name, SscRList *args, SscRList *out_args);
 
 //Interface
-MmcStatus ssc_parser_add_interface(SscParser *parser, 
+MdslStatus ssc_parser_add_interface(SscParser *parser, 
 	const char *name, const char *parent, SscRList *fns);
 	
 //Reference
-MmcStatus ssc_parser_exec_ref(SscParser *parser, const char *name);
+MdslStatus ssc_parser_exec_ref(SscParser *parser, const char *name);
 
 //Interface presented by parser
 //All errors and warnings are printed to log stream.
-MmcStatus ssc_parser_parse_needed
+MdslStatus ssc_parser_parse_needed
 	(SscSymbolDB *db, FILE *log, const char *filename);
 

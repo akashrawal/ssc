@@ -74,10 +74,10 @@ void ssc_servant_call(SscServant *servant, MmcMsg *msg, SscCallerCtx *ctx)
 	//Deserialize the arguments
 	if (sstub->args_size)
 	{
-		args = mmc_tryalloc(sstub->args_size);
+		args = mdsl_tryalloc(sstub->args_size);
 		if (!args)
 			goto fail;
-		if ((* sstub->read_msg)(msg, args) != MMC_SUCCESS)
+		if ((* sstub->read_msg)(msg, args) != MDSL_SUCCESS)
 			goto fail;
 	}
 	
@@ -122,10 +122,10 @@ SscServant *ssc_servant_new(const SscSkel *skel)
 	SscServant *servant;
 	int i;
 	
-	servant = (SscServant *) mmc_alloc
+	servant = (SscServant *) mdsl_alloc
 		(sizeof(SscServant) + (sizeof(void *) * skel->n_fns));
 
-	mmc_rc_init(servant);
+	mdsl_rc_init(servant);
 	
 	servant->skel = skel;
 	servant->user_data = NULL;
@@ -135,5 +135,5 @@ SscServant *ssc_servant_new(const SscSkel *skel)
 	return servant;
 }
 
-mmc_rc_define(SscServant, ssc_servant);
+mdsl_rc_define(SscServant, ssc_servant);
 

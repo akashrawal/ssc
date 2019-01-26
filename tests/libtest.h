@@ -31,7 +31,7 @@ void test_caller_ctx_init(TestCallerCtx *ctx);
 
 //Driver for struct-based tests
 typedef MmcMsg * (*TestSerializeFn) (void *value);
-typedef MmcStatus (*TestDeserializeFn) (MmcMsg *msg, void *value);
+typedef MdslStatus (*TestDeserializeFn) (MmcMsg *msg, void *value);
 typedef int (*TestEqualFn) (void *a, void *b);
 typedef void (*TestFreeFn) (void *x);
 

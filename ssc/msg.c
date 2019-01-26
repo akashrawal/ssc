@@ -38,7 +38,7 @@ void ssc_msg_create_layout(MmcMsg *msg, size_t len, uint32_t *layout)
 	int qlim;
 	
 	//Initialize queue
-	qdata = mmc_alloc(sizeof(MmcMsg) * len);
+	qdata = mdsl_alloc(sizeof(MmcMsg) * len);
 	qdata[0] = msg;
 	qlim = 1;
 
@@ -91,7 +91,7 @@ MmcMsg *ssc_msg_alloc_by_layout(size_t len, uint32_t *layout)
 		return NULL;
 	
 	//Initialize queue
-	qdata = mmc_tryalloc(sizeof(MmcMsg) * len);
+	qdata = mdsl_tryalloc(sizeof(MmcMsg) * len);
 	if (! qdata)
 		return NULL;
 	qlim = 1;
@@ -168,7 +168,7 @@ size_t ssc_msg_get_blocks(MmcMsg *msg, size_t len, SscMBlock *data)
 	int dc;
 	
 	//Initialize queue
-	qdata = mmc_alloc(sizeof(MmcMsg) * len);
+	qdata = mdsl_alloc(sizeof(MmcMsg) * len);
 	qdata[0] = msg;
 	qlim = 1;
 

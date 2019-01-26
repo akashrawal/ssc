@@ -30,18 +30,18 @@ struct _SscAllocHandle
 
 struct _SscAllocator
 {
-	MmcRC parent;
+	MdslRC parent;
 	
 	SscAllocHandle *allocated;
 };
 
-mmc_rc_define(SscAllocator, ssc_allocator);
+mdsl_rc_define(SscAllocator, ssc_allocator);
 
 SscAllocator *ssc_allocator_new()
 {
-	SscAllocator *allocator = mmc_new(SscAllocator);
+	SscAllocator *allocator = mdsl_new(SscAllocator);
 	
-	mmc_rc_init(allocator);
+	mdsl_rc_init(allocator);
 	allocator->allocated = NULL;
 	
 	return allocator;
@@ -52,7 +52,7 @@ void *ssc_allocator_alloc(SscAllocator *allocator, size_t size)
 	void *mem;
 	SscAllocHandle *handle;
 	
-	handle = (SscAllocHandle *) mmc_alloc2
+	handle = (SscAllocHandle *) mdsl_alloc2
 		(sizeof(SscAllocHandle), size, &mem);
 	handle->next = allocator->allocated;
 	allocator->allocated = handle;
@@ -97,7 +97,7 @@ struct _SscFileList
 
 struct _SscSymbolDB 
 {
-	MmcRC parent;
+	MdslRC parent;
 	
 	SscBst *sym_index;
 	SscBst *file_index;
@@ -105,7 +105,7 @@ struct _SscSymbolDB
 	SscFileList *file_list;
 };
 
-mmc_rc_define(SscSymbolDB, ssc_symbol_db);
+mdsl_rc_define(SscSymbolDB, ssc_symbol_db);
 
 SscDLen ssc_type_fundamental_sizes[13] =
 	{
@@ -271,9 +271,9 @@ int ssc_type_is_constsize(SscType type)
 
 SscSymbolDB *ssc_symbol_db_new()
 {
-	SscSymbolDB *db = mmc_new(SscSymbolDB);
+	SscSymbolDB *db = mdsl_new(SscSymbolDB);
 	
-	mmc_rc_init(db);
+	mdsl_rc_init(db);
 	
 	db->sym_index = ssc_bst_new();
 	db->file_index = ssc_bst_new();
@@ -319,7 +319,7 @@ void ssc_symbol_db_register_file_parsing
 {
 	SscFileList *file;
 	
-	file = (SscFileList *) mmc_alloc
+	file = (SscFileList *) mdsl_alloc
 		(sizeof(SscFileList) + strlen(filename) + 1);
 		
 	file->data.allocator = NULL;
@@ -331,7 +331,7 @@ void ssc_symbol_db_register_file_parsing
 	strcpy(file->name, filename);
 	
 	if (ssc_bst_insert(db->file_index, filename, file) 
-		!= MMC_SUCCESS)
+		!= MDSL_SUCCESS)
 		ssc_error("Attempted to register already parsing file \"%s\"",
 			filename);
 }
@@ -380,7 +380,7 @@ void ssc_symbol_db_register_file_parsed
 	{
 		//Add to index and check for duplicates
 		if (ssc_bst_insert(db->sym_index, sym_iter->name, sym_iter)
-			!= MMC_SUCCESS)
+			!= MDSL_SUCCESS)
 				ssc_error("Duplicate symbol \"%s\"", sym_iter->name);
 		
 		//Calculate sizes as applicable

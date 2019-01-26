@@ -20,7 +20,7 @@
  
 #include "incl.h"
 
-mmc_declare_array(SscSymbol *, SscSymbolVector, ssc_symbol_vector);
+mdsl_declare_array(SscSymbol *, SscSymbolVector, ssc_symbol_vector);
 
 struct _SscSequencer
 {
@@ -33,7 +33,7 @@ SscSequencer *ssc_sequencer_new(SscSymbolDB *db)
 {
 	SscSequencer *seqr;
 	
-	seqr = mmc_new(SscSequencer);
+	seqr = mdsl_new(SscSequencer);
 	
 	seqr->db = db;
 	ssc_symbol_db_ref(db);

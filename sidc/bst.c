@@ -43,7 +43,7 @@ static BstNode *bst_node_new(const char *key, void *value)
 {
 	size_t key_len = strlen(key);
 	
-	BstNode *node = (BstNode *) mmc_alloc(sizeof(BstNode) + key_len + 1);
+	BstNode *node = (BstNode *) mdsl_alloc(sizeof(BstNode) + key_len + 1);
 	node->value = value;
 	node->left = node->right = NULL;
 	node->height = 1;
@@ -107,17 +107,17 @@ static BstNode *bst_node_rotate_right(BstNode *node)
 //The data structure
 struct _SscBst
 {
-	MmcRC parent;
+	MdslRC parent;
 	BstNode *root;
 };
 
-mmc_rc_define(SscBst, ssc_bst);
+mdsl_rc_define(SscBst, ssc_bst);
 
 SscBst *ssc_bst_new()
 {
 	SscBst *bst = (SscBst *) malloc(sizeof(SscBst));
 	
-	mmc_rc_init(bst);
+	mdsl_rc_init(bst);
 	bst->root = NULL;
 	
 	return bst;
@@ -165,7 +165,7 @@ static BstNode *insert_rec(BstNode *node, BstNode *new_node)
 	return node;
 }
 
-MmcStatus ssc_bst_insert(SscBst *bst, const char *key, void *value)
+MdslStatus ssc_bst_insert(SscBst *bst, const char *key, void *value)
 {	
 	if (! value)
 		ssc_error("Null values are prohibited");
@@ -175,11 +175,11 @@ MmcStatus ssc_bst_insert(SscBst *bst, const char *key, void *value)
 	if (! new_root)
 	{
 		free(new_node);
-		return MMC_FAILURE;
+		return MDSL_FAILURE;
 	}
 	bst->root = new_root;
 	
-	return MMC_SUCCESS;
+	return MDSL_SUCCESS;
 }
 
 void *ssc_bst_lookup(SscBst *bst, const char *key)

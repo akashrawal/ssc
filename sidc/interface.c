@@ -80,7 +80,7 @@ static void ssc_arglist_gen_declaration
 		
 	//Function to deserialize a message to get back structure
 	fprintf(h_file, 
-		"MmcStatus %s%s(MmcMsg *msg, %s%s *value);\n\n",
+		"MdslStatus %s%s(MmcMsg *msg, %s%s *value);\n\n",
 		name_prefix, args_type.df, name_prefix, args_type.sn);
 }
 
@@ -143,7 +143,7 @@ static void ssc_arglist_gen_code
 	
 	//Function to deserialize a message to get back structure
 	fprintf(c_file, 
-		"MmcStatus %s%s(MmcMsg *msg, %s%s *value)\n"
+		"MdslStatus %s%s(MmcMsg *msg, %s%s *value)\n"
 		"{\n"
 		"    SscSegment seg[1];\n"
 		"    SscMsgIter msg_iter[1];\n"
@@ -151,13 +151,13 @@ static void ssc_arglist_gen_code
 		"    \n"
 		"    ssc_msg_iter_init(msg_iter, msg);\n"
 		"    if (ssc_msg_iter_get_segment(msg_iter, SSC_PREFIX_SIZE, 0, seg)\n"
-		"            == MMC_FAILURE)\n"
+		"            == MDSL_FAILURE)\n"
 		"        goto _ssc_return;\n"
 		"    prefix_val = ssc_segment_read_uint8(seg);\n"
 		"    if (prefix_val != %d)\n"
 		"        goto _ssc_return;\n"
 		"    if (ssc_msg_iter_get_segment(msg_iter, %d, %d, seg)\n"
-		"            == MMC_FAILURE)\n"
+		"            == MDSL_FAILURE)\n"
 		"        goto _ssc_return;\n"
 		"    \n",
 		name_prefix, args_type.df, name_prefix, args_type.sn,
@@ -171,7 +171,7 @@ static void ssc_arglist_gen_code
 		"    if (! ssc_msg_iter_at_end(msg_iter))\n"
 		"        goto _ssc_destroy_n_return;\n"
 		"    \n"
-		"    return MMC_SUCCESS;\n"
+		"    return MDSL_SUCCESS;\n"
 		"    \n"
 		"_ssc_destroy_n_return:\n");
 	
@@ -179,7 +179,7 @@ static void ssc_arglist_gen_code
 	
 	fprintf(c_file, 
 		"_ssc_return:\n"
-		"    return MMC_FAILURE;\n"
+		"    return MDSL_FAILURE;\n"
 		"}\n\n");
 }
 
@@ -202,7 +202,7 @@ static int ssc_count_all_fns(SscSymbol *value)
 }
 
 //Array containing names of all functions
-mmc_declare_array(char *, SscFnList, ssc_fn_list);
+mdsl_declare_array(char *, SscFnList, ssc_fn_list);
 
 static void ssc_fn_list_create(SscFnList *fl, SscSymbol *value)
 {

@@ -26,7 +26,7 @@ MmcMsg *ssc_create_prefixed_empty_msg(uint8_t prefix);
 #define SSC_PREFIX_SIZE 1
 
 //Type for servant-side stubs
-typedef MmcStatus (* SscReadMsgFn) (MmcMsg *msg, void *args);
+typedef MdslStatus (* SscReadMsgFn) (MmcMsg *msg, void *args);
 typedef MmcMsg*  (* SscCreateReplyFn) (void *out_args);
 typedef void (* SscArgsFreeFn) (void *args);
 typedef struct
@@ -60,14 +60,14 @@ typedef void (* SscImplFn)
 
 struct _SscServant
 {
-	MmcRC parent;
+	MdslRC parent;
 	const SscSkel *skel;
 	
 	void *user_data;
 	SscImplFn impl[]; 
 };
 
-mmc_rc_declare(SscServant, ssc_servant);
+mdsl_rc_declare(SscServant, ssc_servant);
 
 /**Creates a new servant using given skeleton.
  * \param skel Skeleton of the interface to expose

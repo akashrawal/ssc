@@ -38,16 +38,16 @@ void test_struct_driver_fn(void *data, size_t stride, size_t len,
 		TestEqualFn equal_fn, TestFreeFn free_fn)
 {
 	size_t i;
-	void *test_data = mmc_alloc(stride);
+	void *test_data = mdsl_alloc(stride);
 	for (i = 0; i < len; i++)
 	{
 		fprintf(stderr, "Testcase %zu\n", i);
 
-		void *cur_data = MMC_PTR_ADD(data, stride * i);
+		void *cur_data = MDSL_PTR_ADD(data, stride * i);
 		memset(test_data, 0, stride);
 
 		MmcMsg *msg = (*serialize_fn)(cur_data);
-		if ((*deserialize_fn)(msg, test_data) != MMC_SUCCESS)
+		if ((*deserialize_fn)(msg, test_data) != MDSL_SUCCESS)
 		{
 			fprintf(stderr, "  Deserialize failed.\n");
 			abort();

@@ -91,9 +91,9 @@ void ssc_msg_iter_init(SscMsgIter *self, MmcMsg *msg);
  * \param n_bytes The number of bytes to 'read' from the byte stream
  * \param n_submsgs The number of submsgs to 'read' from the block stream
  * \param res Pointer to the resulting segment struct
- * \return an MmcStatus to state whether the operation was successful.
+ * \return an MdslStatus to state whether the operation was successful.
  */
-MmcStatus ssc_msg_iter_get_segment
+MdslStatus ssc_msg_iter_get_segment
 	(SscMsgIter *self, size_t n_bytes, size_t n_submsgs, 
 	 SscSegment *res);
 
