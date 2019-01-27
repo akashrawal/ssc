@@ -1,7 +1,7 @@
 /* libtest.c
  * Test support library
  * 
- * Copyright 2015-2018 Akash Rawal
+ * Copyright 2015-2019 Akash Rawal
  * This file is part of Modular Middleware.
  * 
  * Modular Middleware is free software: you can redistribute it and/or modify
