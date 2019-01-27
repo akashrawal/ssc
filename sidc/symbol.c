@@ -99,8 +99,8 @@ struct _SscSymbolDB
 {
 	MdslRC parent;
 	
-	SscBst *sym_index;
-	SscBst *file_index;
+	MdslDict *sym_index;
+	MdslDict *file_index;
 	
 	SscFileList *file_list;
 };
@@ -275,8 +275,8 @@ SscSymbolDB *ssc_symbol_db_new()
 	
 	mdsl_rc_init(db);
 	
-	db->sym_index = ssc_bst_new();
-	db->file_index = ssc_bst_new();
+	db->sym_index = mdsl_dict_new();
+	db->file_index = mdsl_dict_new();
 	
 	db->file_list = NULL;
 	
@@ -288,7 +288,7 @@ SscFileState ssc_symbol_db_get_file_state
 {
 	SscFileList *file;
 	
-	file = (SscFileList *) ssc_bst_lookup(db->file_index, filename);
+	file = (SscFileList *) mdsl_dict_get_str(db->file_index, filename);
 	
 	if (! file)
 		return SSC_FILE_UNREC;
@@ -301,7 +301,7 @@ SscFileData ssc_symbol_db_get_file_data
 {
 	SscFileList *file;
 	
-	file = (SscFileList *) ssc_bst_lookup(db->file_index, filename);
+	file = (SscFileList *) mdsl_dict_get_str(db->file_index, filename);
 	
 	if (file)
 		if (file->state != SSC_FILE_PARSED)
@@ -330,8 +330,8 @@ void ssc_symbol_db_register_file_parsing
 	file->state = SSC_FILE_PARSING;
 	strcpy(file->name, filename);
 	
-	if (ssc_bst_insert(db->file_index, filename, file) 
-		!= MDSL_SUCCESS)
+	if (mdsl_dict_set_str(db->file_index, filename, file) 
+		!= NULL)
 		ssc_error("Attempted to register already parsing file \"%s\"",
 			filename);
 }
@@ -342,7 +342,7 @@ void ssc_symbol_db_register_file_parsed
 	SscFileList *file;
 	SscSymbol *sym_iter;
 	
-	file = (SscFileList *) ssc_bst_lookup(db->file_index, filename);
+	file = (SscFileList *) mdsl_dict_get_str(db->file_index, filename);
 	
 	if (file)
 		if (file->state != SSC_FILE_PARSING)
@@ -379,8 +379,8 @@ void ssc_symbol_db_register_file_parsed
 	for (sym_iter = data.list; sym_iter; sym_iter = sym_iter->next)
 	{
 		//Add to index and check for duplicates
-		if (ssc_bst_insert(db->sym_index, sym_iter->name, sym_iter)
-			!= MDSL_SUCCESS)
+		if (mdsl_dict_set_str(db->sym_index, sym_iter->name, sym_iter)
+			!= NULL)
 				ssc_error("Duplicate symbol \"%s\"", sym_iter->name);
 		
 		//Calculate sizes as applicable
@@ -408,7 +408,7 @@ void ssc_symbol_db_register_file_bad
 {	
 	SscFileList *file;
 	
-	file = (SscFileList *) ssc_bst_lookup(db->file_index, filename);
+	file = (SscFileList *) mdsl_dict_get_str(db->file_index, filename);
 	
 	if (file)
 		if (file->state != SSC_FILE_PARSING)
@@ -428,7 +428,7 @@ SscSymbol *ssc_symbol_db_lookup(SscSymbolDB *db, const char *name)
 {
 	SscSymbol *sym;
 	
-	sym = ssc_bst_lookup(db->sym_index, name);
+	sym = mdsl_dict_get_str(db->sym_index, name);
 	
 	return sym;
 }
@@ -437,8 +437,8 @@ static void ssc_symbol_db_destroy(SscSymbolDB *db)
 {
 	SscFileList *file_iter, *file_next;
 	
-	ssc_bst_unref(db->file_index);
-	ssc_bst_unref(db->sym_index);
+	mdsl_dict_unref(db->file_index);
+	mdsl_dict_unref(db->sym_index);
 	
 	for (file_iter = db->file_list; file_iter; file_iter = file_next)
 	{

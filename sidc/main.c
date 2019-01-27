@@ -20,7 +20,6 @@
 #include "incl.h"
 
 
-#ifdef SSC_TEST_NONE
 
 #include <errno.h>
 
@@ -161,5 +160,4 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-#endif //SSC_TEST_NONE
 

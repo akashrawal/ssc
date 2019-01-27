@@ -5,7 +5,6 @@ gen = lex.yy.c lex.yy.h parser.tab.c parser.tab.h
 bin_PROGRAMS = sidc
 
 sidc_SOURCES = incl.h \
-	bst.c         bst.h \
 	symbol.c      symbol.h \
 	parselib.c    parselib.h \
 	codegen.c     codegen.h \

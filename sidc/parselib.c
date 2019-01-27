@@ -36,7 +36,7 @@ struct _SscParser
 	
 	//Index of all symbols parser can refer
 	//(Reference also adds to this index)
-	SscBst *index;
+	MdslDict *index;
 	
 	//List of parsed symbols
 	struct
@@ -109,7 +109,7 @@ SscSymbol *ssc_parser_alloc_symbol
 	SscSymbol *sym;
 	
 	//Check for name clashes. In that case we should return NULL.
-	if (ssc_bst_lookup(parser->index, name))
+	if (mdsl_dict_get_str(parser->index, name))
 	{
 		ssc_parser_error(parser, "Name clash with %s", name);
 		return NULL;
@@ -136,7 +136,7 @@ SscSymbol *ssc_parser_alloc_symbol
 	parser->symlist.tail = sym;
 	
 	//Add to list
-	ssc_bst_insert(parser->index, name, sym);
+	mdsl_dict_set_str(parser->index, name, sym);
 	
 	return sym;
 }
@@ -144,7 +144,7 @@ SscSymbol *ssc_parser_alloc_symbol
 //Searches for a symbol within references, returns NULL if fails
 SscSymbol *ssc_parser_lookup(SscParser *parser, const char *name)
 {
-	return ssc_bst_lookup(parser->index, name);
+	return mdsl_dict_get_str(parser->index, name);
 }
 
 //Searches for a symbol, checks its type, and prints a message 
@@ -442,16 +442,16 @@ static MdslStatus ssc_parser_rlist_to_array_checked (SscParser *parser,
 {
 	size_t len, i;
 	SscRList *iter;
-	SscBst *index;
+	MdslDict *index;
 	void **array;
 	
 	//Count and check for name clashes
-	index = ssc_bst_new();
+	index = mdsl_dict_new();
 	len = 0;
 	for (iter = rlist; iter; iter = iter->prev)
 	{
 		char *fname = (char *) MDSL_PTR_ADD(iter->d.data, name_offset);
-		if (ssc_bst_insert(index, fname, fname) != MDSL_SUCCESS)
+		if (mdsl_dict_set_str(index, fname, fname) != NULL)
 		{
 			ssc_parser_error(parser, clash_msg, fname, pname);
 			break;
@@ -459,7 +459,7 @@ static MdslStatus ssc_parser_rlist_to_array_checked (SscParser *parser,
 		
 		len++;
 	}
-	ssc_bst_unref(index);
+	mdsl_dict_unref(index);
 	
 	if (iter)
 		return MDSL_FAILURE;
@@ -596,7 +596,7 @@ MdslStatus ssc_parser_exec_ref(SscParser *parser, const char *name)
 	file_data = ssc_symbol_db_get_file_data(parser->db, name);
 	for (iter = file_data.list; iter; iter = iter->next)
 	{
-		ssc_bst_insert(parser->index, iter->name, iter);
+		mdsl_dict_set_str(parser->index, iter->name, iter);
 	}
 	
 	return MDSL_SUCCESS;
@@ -617,7 +617,7 @@ static SscParser *ssc_parser_new
 	parser->int_alloc = ssc_allocator_new();
 	parser->final_alloc = ssc_allocator_new();
 	
-	parser->index = ssc_bst_new();
+	parser->index = mdsl_dict_new();
 	
 	parser->symlist.head = parser->symlist.tail = NULL;
 	
@@ -632,7 +632,7 @@ static SscParser *ssc_parser_new
 
 static void ssc_parser_destroy(SscParser *parser)
 {
-	ssc_bst_unref(parser->index);
+	mdsl_dict_unref(parser->index);
 	
 	ssc_allocator_unref(parser->int_alloc);
 	ssc_allocator_unref(parser->final_alloc);

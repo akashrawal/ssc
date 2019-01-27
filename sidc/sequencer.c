@@ -25,7 +25,7 @@ mdsl_declare_array(SscSymbol *, SscSymbolVector, ssc_symbol_vector);
 struct _SscSequencer
 {
 	SscSymbolDB *db;
-	SscBst *index;
+	MdslDict *index;
 	SscSymbolVector vector;
 };
 
@@ -38,7 +38,7 @@ SscSequencer *ssc_sequencer_new(SscSymbolDB *db)
 	seqr->db = db;
 	ssc_symbol_db_ref(db);
 	
-	seqr->index = ssc_bst_new();
+	seqr->index = mdsl_dict_new();
 	ssc_symbol_vector_init(&(seqr->vector));
 	
 	return seqr;
@@ -62,7 +62,7 @@ void ssc_sequencer_process_symbol(SscSequencer *seqr, SscSymbol *sym)
 	void *index_entry;
 	int i;
 	
-	index_entry = ssc_bst_lookup(seqr->index, sym->name);
+	index_entry = mdsl_dict_get_str(seqr->index, sym->name);
 	if (index_entry)
 	{
 		//Done
@@ -93,7 +93,7 @@ void ssc_sequencer_process_symbol(SscSequencer *seqr, SscSymbol *sym)
 	}
 	
 	//We are done. Update datastructures.
-	ssc_bst_insert(seqr->index, sym->name, sym);
+	mdsl_dict_set_str(seqr->index, sym->name, sym);
 	ssc_symbol_vector_append(&(seqr->vector), sym);
 }
 
@@ -119,7 +119,7 @@ SscSymbolArray ssc_sequencer_destroy(SscSequencer *seqr)
 	res.d = seqr->vector.data;
 	
 	ssc_symbol_db_unref(seqr->db);
-	ssc_bst_unref(seqr->index);
+	mdsl_dict_unref(seqr->index);
 	free(seqr);
 	
 	return res;
