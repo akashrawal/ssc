@@ -20,17 +20,17 @@
 
 #include "libtest.h"
 
-static void test_caller_ctx_return_fn(SscCallerCtx *p_ctx, MmcMsg *reply)
+static void test_replier_return_fn(MmcReplier *p_replier, MmcMsg *reply)
 {
-	TestCallerCtx *ctx = (TestCallerCtx *) p_ctx;
+	TestReplier *replier = (TestReplier *) p_replier;
 	mmc_msg_ref(reply);
-	ctx->reply = reply;
+	replier->reply = reply;
 }
 
-void test_caller_ctx_init(TestCallerCtx *ctx)
+void test_replier_init(TestReplier *replier)
 {
-	memset(ctx, 0, sizeof(TestCallerCtx));
-	ctx->parent.return_fn = test_caller_ctx_return_fn;
+	memset(replier, 0, sizeof(TestReplier));
+	replier->parent.call = test_replier_return_fn;
 }
 
 void test_struct_driver_fn(void *data, size_t stride, size_t len,

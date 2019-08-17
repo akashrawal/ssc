@@ -44,8 +44,10 @@ MmcMsg *ssc_create_prefixed_empty_msg(uint8_t prefix)
 
 //Servant type 
 
-void ssc_servant_call(SscServant *servant, MmcMsg *msg, SscCallerCtx *ctx)
+static void ssc_servant_call(MmcServant *p_servant, MmcMsg *msg, MmcReplier *replier)
 {
+	SscServant *servant = (SscServant *) p_servant;
+
 	int id;
 	void *args = NULL;
 	SscSStub *sstub;
@@ -82,8 +84,7 @@ void ssc_servant_call(SscServant *servant, MmcMsg *msg, SscCallerCtx *ctx)
 	}
 	
 	//Call the function
-	//TODO: Return error for unimplemented functions.
-	(* servant->impl[id])(servant, ctx, args);
+	(* servant->impl)(servant, replier, id, args);
 	
 	//Free arguments
 	if (sstub->in_args_free)
@@ -97,43 +98,43 @@ void ssc_servant_call(SscServant *servant, MmcMsg *msg, SscCallerCtx *ctx)
 fail:
 	//Send error message back
 	reply_msg = ssc_create_prefixed_empty_msg(1);
-	(* ctx->return_fn)(ctx, reply_msg);
+	mmc_replier_call(replier, reply_msg);
 	mmc_msg_unref(reply_msg);
 	
 	if (args)
 		free(args);
 }
 
-void ssc_servant_return(SscServant *servant, SscCallerCtx *ctx, void *args)
+void ssc_servant_return(SscServant *servant, 
+		int method_id, MmcReplier *replier, void *args)
 {
-	MmcMsg *reply_msg = (* servant->skel->sstubs[ctx->method_id].create_reply)
+	MmcMsg *reply_msg = (* servant->skel->sstubs[method_id].create_reply)
 		(args);
-	(* ctx->return_fn)(ctx, reply_msg);
+	mmc_replier_call(replier, reply_msg);
 	mmc_msg_unref(reply_msg);
 }
 
-static void ssc_servant_destroy(SscServant *servant)
+static void ssc_servant_destroy(MmcServant *p_servant)
 {
+	SscServant *servant = (SscServant*) p_servant;
 	free(servant);	
 }
 
-SscServant *ssc_servant_new(const SscSkel *skel)
+SscServant *ssc_servant_new(const SscSkel *skel,
+		SscImplFn impl, void *user_data)
 {
 	SscServant *servant;
-	int i;
 	
-	servant = (SscServant *) mdsl_alloc
-		(sizeof(SscServant) + (sizeof(void *) * skel->n_fns));
+	servant = (SscServant *) mdsl_alloc (sizeof(SscServant));
 
 	mdsl_rc_init(servant);
+	servant->parent.destroy = ssc_servant_destroy;
+	servant->parent.call = ssc_servant_call;
 	
 	servant->skel = skel;
-	servant->user_data = NULL;
-	for (i = 0; i < skel->n_fns; i++)
-		servant->impl[i] = NULL;
+	servant->impl = impl;
+	servant->user_data = user_data;;
 	
 	return servant;
 }
-
-mdsl_rc_define(SscServant, ssc_servant);
 

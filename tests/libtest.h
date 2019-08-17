@@ -23,11 +23,11 @@
 //Caller context for testing
 typedef struct
 {
-	SscCallerCtx parent;
+	MmcReplier parent;
 	MmcMsg *reply;
-} TestCallerCtx;
+} TestReplier;
 
-void test_caller_ctx_init(TestCallerCtx *ctx);
+void test_replier_init(TestReplier *replier);
 
 //Driver for struct-based tests
 typedef MmcMsg * (*TestSerializeFn) (void *value);

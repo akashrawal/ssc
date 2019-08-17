@@ -22,37 +22,37 @@
 #include "idl.h"
 
 
-void test_iface_increment_impl
-	(SscServant *servant, SscCallerCtx *ctx, void *argp)
+void test_iface_impl
+	(SscServant *servant, MmcReplier *replier, int method_id, void *argp)
 {
 	TestIface__increment__in_args *args = argp;
 	TestIface__increment__out_args  out_args;
 
 	out_args.out = args->in + 1;
-	
-	ssc_servant_return(servant, ctx, &out_args);
+
+	ssc_servant_return(servant, method_id, replier, &out_args);
 }
 
 
 void test_call(SscServant *servant, int val)
 {
-	TestCallerCtx ctx;
+	TestReplier replier;
 	TestIface__increment__in_args in_args;
 	TestIface__increment__out_args out_args;
 
 	//Initialize caller context
-	test_caller_ctx_init(&ctx);
+	test_replier_init(&replier);
 
 	//Call the 'remote' procedure
 	in_args.in = val;
 	MmcMsg *msg = TestIface__increment__create_msg(&in_args);
-	ssc_servant_call(servant, msg, (SscCallerCtx *) &ctx);
+	mmc_servant_call((MmcServant *) servant, msg, (MmcReplier *) &replier);
 	mmc_msg_unref(msg);
 
 	//Deserialize the reply returned
-	if (TestIface__increment__read_reply(ctx.reply, &out_args) == MDSL_FAILURE)
+	if (TestIface__increment__read_reply(replier.reply, &out_args) == MDSL_FAILURE)
 		ssc_error("Failed to deserialize the reply");
-	mmc_msg_unref(ctx.reply);
+	mmc_msg_unref(replier.reply);
 
 	//Verify the reply
 	if (out_args.out != val + 1)
@@ -63,16 +63,13 @@ void test_call(SscServant *servant, int val)
 int main()
 {
 	//Create servant
-	SscServant *servant = ssc_servant_new(TestIface);
-
-	//Implement functions
-	servant->impl[TestIface__increment__ID] = test_iface_increment_impl;
+	SscServant *servant = ssc_servant_new(TestIface, test_iface_impl, NULL);
 
 	//Test calls
 	test_call(servant, 1);
 
 	//Garbage collect
-	ssc_servant_unref(servant);
+	mmc_servant_unref((MmcServant *) servant);
 	
 	return 0;
 }
