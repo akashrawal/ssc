@@ -43,6 +43,15 @@ MmcMsg *ssc_create_prefixed_empty_msg(uint8_t prefix)
 }
 
 //Servant type 
+struct _SscServant
+{
+	MmcServant parent;
+
+	const SscSkel *skel;
+
+	SscImplFn impl; 
+	void *user_data;
+};
 
 static void ssc_servant_call(MmcServant *p_servant, MmcMsg *msg, MmcReplier *replier)
 {
@@ -84,7 +93,7 @@ static void ssc_servant_call(MmcServant *p_servant, MmcMsg *msg, MmcReplier *rep
 	}
 	
 	//Call the function
-	(* servant->impl)(servant, replier, id, args);
+	(* servant->impl)(servant, replier, id, args, servant->user_data);
 	
 	//Free arguments
 	if (sstub->in_args_free)

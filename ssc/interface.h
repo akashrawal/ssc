@@ -47,17 +47,8 @@ typedef struct
 //Servant type 
 typedef struct _SscServant SscServant;
 typedef void (* SscImplFn) 
-	(SscServant *servant, MmcReplier *replier, int method_id, void *args);
-
-struct _SscServant
-{
-	MmcServant parent;
-
-	const SscSkel *skel;
-
-	SscImplFn impl; 
-	void *user_data;
-};
+	(SscServant *servant, MmcReplier *replier, int method_id, void *args,
+	 void *user_data);
 
 /**Creates a new servant using given skeleton.
  * \param skel Skeleton of the interface to expose

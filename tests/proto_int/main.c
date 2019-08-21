@@ -23,7 +23,8 @@
 
 
 void test_iface_impl
-	(SscServant *servant, MmcReplier *replier, int method_id, void *argp)
+	(SscServant *servant, MmcReplier *replier, int method_id, void *argp,
+	 void *user_data)
 {
 	TestIface__increment__in_args *args = argp;
 	TestIface__increment__out_args  out_args;
