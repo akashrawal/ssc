@@ -357,11 +357,12 @@ void ssc_iface_gen_code
 		"        (SscReadMsgFn) %s__read_msg,\n"
 		"        (SscCreateReplyFn) %s__create_reply,\n"
 		"        (SscArgsFreeFn) %s__in_args_free\n"
-		"    }\n",
+		"    }%s\n",
 			fl->data[i],
 			fl->data[i],
 			fl->data[i],
-			fl->data[i]);
+			fl->data[i],
+			i < (fl_len - 1) ? "," : "");
 	}
 	fprintf(c_file, 
 		"};\n"

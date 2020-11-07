@@ -809,11 +809,12 @@ void ssc_var_list_code_for_read
 
 //Writes code to deserialize a given list of variables: 
 //error handling part
-void ssc_var_list_code_for_read_fail
+int ssc_var_list_code_for_read_fail
 	(SscVarList list, const char *prefix, int with_free, FILE *c_file)
 {
 	int i;
 	int free_required = with_free ? 1 : 0;
+	int label_count = 0;
 	
 	for (i = list.len - 1; i >= 0; i--)
 	{
@@ -827,8 +828,11 @@ void ssc_var_list_code_for_read_fail
 			fprintf(c_file, 
 		"_ssc_fail_%s:\n", iter->name);
 			free_required = 1;
+			label_count++;
 		}
 	}
+
+	return label_count;
 }
 
 //Writes code to free a given list of variables

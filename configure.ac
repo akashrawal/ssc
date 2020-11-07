@@ -43,6 +43,8 @@ AC_CONFIG_FILES([Makefile
 				 tests/test_optional/Makefile
 				 tests/test_seq/Makefile
 				 tests/test_optional_ptr/Makefile
+				 tests/test_iface_1/Makefile
+				 tests/test_iface_2/Makefile
 				 ])
 AC_CONFIG_HEADERS([config.h ssc/generated.h])
 AC_OUTPUT

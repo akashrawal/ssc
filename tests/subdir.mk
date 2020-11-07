@@ -10,4 +10,4 @@ main.$(OBJEXT): idl.h
 idl.c idl.h: idl.txt $(top_builddir)/sidc/sidc
 	$(top_builddir)/sidc/sidc $(srcdir)/idl.txt $(builddir)/idl
 EXTRA_DIST = idl.txt
-CLEANFILES = idl.c idl.h idl.txt.test.c idl.txt.test.h
+CLEANFILES = idl.c idl.h

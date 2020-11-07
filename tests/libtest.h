@@ -51,3 +51,28 @@ void test_struct_driver_fn(void *data, size_t stride, size_t len,
 				); \
 	} while (0)
 
+
+#define TEST_CALL(iface, method, set_args, check_reply) \
+	do { \
+		TestReplier replier; \
+		iface ## __ ## method ## __in_args in_args; \
+		iface ## __ ## method ## __out_args out_args; \
+		\
+		/*Initialize caller context*/ \
+		test_replier_init(&replier); \
+		\
+		/*Call the 'remote' procedure*/ \
+		{ set_args } \
+		MmcMsg *msg = iface ## __ ## method ## __create_msg(&in_args); \
+		mmc_servant_call((MmcServant *) servant, msg, (MmcReplier *) &replier); \
+		mmc_msg_unref(msg); \
+		\
+		/*Deserialize the reply returned*/ \
+		if (iface ## __ ## method ## __read_reply(replier.reply, &out_args) == MDSL_FAILURE) \
+			ssc_error("Failed to deserialize the reply"); \
+		mmc_msg_unref(replier.reply); \
+		\
+		/*Verify the reply*/ \
+		{ check_reply } \
+	} while (0)
+

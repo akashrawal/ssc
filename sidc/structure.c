@@ -96,6 +96,7 @@ void ssc_struct_gen_code
 	(SscSymbol *value, FILE *c_file)
 {
 	SscVarList fields;
+	int label_count;
 	
 	//Get details
 	fields = value->v.xstruct.fields;
@@ -141,8 +142,10 @@ void ssc_struct_gen_code
 	ssc_var_list_code_for_read
 		(fields, "value->", c_file);
 	fprintf(c_file, "\n    return 0;\n\n");
-	ssc_var_list_code_for_read_fail(fields, "value->", 0, c_file);
-	fprintf(c_file, "\n    return -1;\n}\n\n");
+	label_count = ssc_var_list_code_for_read_fail(fields, "value->", 0, c_file);
+	if (label_count > 0)
+		fprintf(c_file, "\n    return -1;\n");
+	fprintf(c_file, "}\n\n");
 	
 	//Function to free the structure
 	fprintf(c_file, 

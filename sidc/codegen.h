@@ -38,7 +38,9 @@ void ssc_var_list_code_for_read
 
 //Writes code to deserialize a given list of variables: 
 //error handling part
-void ssc_var_list_code_for_read_fail
+//Returns number of goto labels added to the code to handle failure.
+//Zero labels mean no code was needed.
+int ssc_var_list_code_for_read_fail
 	(SscVarList list, const char *prefix, int with_free, FILE *c_file);
 
 //Writes code to free a given list of variables
